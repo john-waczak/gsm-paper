@@ -719,7 +719,7 @@ m = 10
 λ = 0.001
 Nᵥ = 3
 
-gsm_l = GenerativeTopographicMapping.GSM(k=k, m=m, Nv=Nᵥ, λ=λ, nonlinear=true, linear=true, bias=false, make_positive=true, tol=1e-5, nepochs=100, rand_init=false, rng=StableRNG(42))
+gsm_l = GSM(k=k, m=m, Nv=Nᵥ, λ=λ, nonlinear=true, linear=true, bias=false, make_positive=true, tol=1e-5, nepochs=100, rand_init=false, rng=StableRNG(42))
 mach_l = machine(gsm_l, Xnl)
 fit!(mach_l, verbosity=1)
 abund_l = DataFrame(MLJ.transform(mach_l, Xnl));

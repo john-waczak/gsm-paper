@@ -35,7 +35,7 @@ X_all = pyconvert(Array, X_all);
 X_full = pyconvert(Array, X_full);
 
 # rescale to reflectance ∈ [0,1]
-scale_fac = 1000.0000
+scale_fac = 10_000.0000
 
 X_large = X_large/scale_fac ;
 X_small = X_small/scale_fac ;
