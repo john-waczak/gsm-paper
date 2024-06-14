@@ -38,8 +38,6 @@ end
 
 
 df = CSV.read(datapath, DataFrame)
-colnames = names(df)
-df = DataFrame(Array(df) ./ 10, colnames)
 X = Array(df)
 
 # 1. Visualize the dataset

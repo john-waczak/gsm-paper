@@ -816,3 +816,128 @@ fig
 save(joinpath(figpath, "abundance-fit.png"), fig)
 save(joinpath(figpath, "abundance-fit.pdf"), fig)
 
+
+
+
+
+# ---------------------------------------------
+# ------------- LNEAR MODEL w/ GSMBig ---------
+# ---------------------------------------------
+
+figpath = joinpath(savepath, "linear-uniform")
+
+
+k = 75
+m = 10
+λ = 0.001
+Nᵥ = 3
+
+n_nodes = binomial(k + Nᵥ - 2, Nᵥ - 1)
+n_rbfs = binomial(m + Nᵥ - 2, Nᵥ - 1)
+
+gsm_l = GSMBig(n_nodes=n_nodes, n_rbfs=n_rbfs, Nv=Nᵥ, λ=λ,  nonlinear=false, linear=true, bias=false, make_positive=true, tol=1e-9, nepochs=100, rand_init=false, rng=StableRNG(42))
+mach_l = machine(gsm_l, X)
+
+fit!(mach_l, verbosity=1)
+
+
+abund_l = DataFrame(MLJ.transform(mach_l, X));
+model = fitted_params(mach_l)[:gsm]
+
+rpt = report(mach_l)
+node_means = rpt[:node_data_means]
+Q = rpt[:Q]
+llhs = rpt[:llhs]
+idx_vertices = rpt[:idx_vertices]
+stdev = sqrt(rpt[:β⁻¹])
+
+
+model = fitted_params(mach_l)[:gsm]
+πk = model.πk
+Z = model.Z
+
+# plot log likelihoods
+fig = Figure();
+ax = Axis(fig[1,1], xlabel="Iteration", ylabel="Log-likelihood", yscale=log10)
+lines!(ax, 2:length(llhs), llhs[2:end], linewidth=3)
+fig
+
+save(joinpath(figpath, "llh__BIG.png"), fig)
+save(joinpath(figpath, "llh__BIG.pdf"), fig)
+
+fig = Figure();
+ax = Axis(fig[1,1], xlabel="Iteration", ylabel="Q (a.u.)", yscale=log10)
+lines!(ax, 2:length(Q), Q[2:end], linewidth=3)
+fig
+
+save(joinpath(figpath, "Q-fit__BIG.png"), fig)
+save(joinpath(figpath, "Q-fit__BIG.pdf"), fig)
+
+
+# plot endmembers for linear data
+fig = Figure();
+ax = Axis(fig[2,1], xlabel="λ", ylabel="Reflectance");
+
+lr = lines!(ax, λs, Rr, color=mints_colors[2], linewidth=3)
+lg = lines!(ax, λs, Rg, color=mints_colors[1], linewidth=3)
+lb = lines!(ax, λs, Rb, color=mints_colors[3], linewidth=3)
+
+ls_fit = []
+linestyles = [:solid, :dash, :dot]
+i = 1
+for idx ∈ idx_vertices
+    Rout = node_means[:,idx]
+    band!(ax, λs, Rout .- (2*stdev), Rout .+ (2*stdev), color=(:gray, 0.5))
+    li = lines!(ax, λs, Rout, color=:gray, linewidth=2, linestyle=linestyles[i])
+    push!(ls_fit, li)
+    i += 1
+end
+
+fig[1,1] = Legend(fig, [lr, lg, lb, ls_fit...], ["Red Band", "Green Band", "Blue Band", "Vertex 1", "Vertex 2", "Vertex 3"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=13, height=-5)
+xlims!(ax, λs[1], λs[end])
+
+save(joinpath(figpath, "extracted-endmembers__BIG.png"), fig)
+save(joinpath(figpath, "extracted-endmembers__BIG.pdf"), fig)
+
+fig
+
+# from these we see that: V1 -> green, V2 -> blue, V3 -> red
+
+
+
+# plot inferred abundance distribution
+fig = Figure();
+ax = Axis(fig[1, 1], aspect=1);
+
+ternaryaxis!(
+    ax,
+    hide_triangle_labels=false,
+    hide_vertex_labels=false,
+    labelx_arrow = "Red",
+    label_fontsize=20,
+    tick_fontsize=15,
+)
+
+ternaryscatter!(
+    ax,
+    abund_l[:,1],
+    abund_l[:,2],
+    abund_l[:,3],
+    color=[CairoMakie.RGBf(abund_l[i,3], abund_l[i, 1], abund_l[i,2]) for i ∈ 1:Npoints],
+    marker=:circle,
+    markersize = 10,
+)
+
+# the triangle is drawn from (0,0) to (0.5, sqrt(3)/2) to (1,0).
+xlims!(ax, -0.2, 1.2) # to center the triangle and allow space for the labels
+ylims!(ax, -0.3, 1.1)
+text!(ax, Point2f(0.075, 0.5), text="z₃", fontsize=22)
+text!(ax, Point2f(0.825, 0.5), text="z₂", fontsize=22)
+text!(ax, Point2f(0.5, -0.175), text="z₁", fontsize=22)
+hidedecorations!(ax) # to hide the axis decorations
+fig
+
+save(joinpath(figpath, "abundance-fit__BIG.png"), fig)
+save(joinpath(figpath, "abundance-fit__BIG.pdf"), fig)
+
+
