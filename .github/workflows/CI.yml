@@ -17,7 +17,6 @@ jobs:
         with:
           name: GSM-paper
           files: ./paper/paper.pdf
-          draft: true
       # - name: Upload PDF fie
       #   uses: actions/upload-artifact@v4
       #   with:
