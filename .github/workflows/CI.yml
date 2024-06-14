@@ -10,7 +10,7 @@ jobs:
         uses: xu-cheng/latex-action@v3
         with:
           root_file: ./paper/paper.tex
-	  work_in_root_file_dir: true
+	        work_in_root_file_dir: true
       - name: Upload PDF file
         uses: softprops/action-gh-release@v2
         with:
