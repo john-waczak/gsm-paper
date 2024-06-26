@@ -6,7 +6,7 @@ using Distributions
 using StableRNGs
 using Statistics, LinearAlgebra
 using Random
-
+using JSON
 
 
 rng = StableRNG(42)
@@ -57,38 +57,54 @@ abund = rand(rng, f_dir, Npoints)
 
 
 X = zeros(Npoints, length(λs));
-σnoise = 0.045
+X = zeros(Npoints, length(λs));
+SNR = 20.0
 
+# create dataset
 for i ∈ axes(X, 1)
     X[i,:] .= (abund[1,i] .* R1) .+ (abund[2,i] .* R2) .+ (abund[3,i] .* R3)
+end
+
+# compute std needed to acheive desired SNR
+σnoise = sqrt(mean(X.^2)/(10^(SNR/10)))
+
+for i ∈ axes(X, 1)
     X[i,:] .= X[i,:] .+ rand(rng, Normal(0, σnoise), length(λs))
 end
+
 
 colnames = Symbol.(["λ_" * lpad(i, 3, "0") for i ∈ 1:length(λs)])
 X = DataFrame(X, colnames);
 
-Xnl = zeros(Npoints, length(λs));
-σnoise_nl = 0.02
+
+
+Npoints_nl = 1_000
+Xnl = zeros(Npoints_nl, length(λs));
+abundnl = rand(rng, f_dir, Npoints_nl)
+σnoise_nl = 0.01
 γ = 0.5
 
-for i ∈ axes(X, 1)
+# DO nonlinear mixing as a Polynomial Post-Nonlinear Mixing Model (PPNM)
 
-    a = abund[1,i]
-    b = abund[2,i]
-    c = abund[3,i]
+for i ∈ axes(Xnl, 1)
+    # compute linear mixing
+    Xnl[i,:] .= (abundnl[1,i] .* R1) .+ (abundnl[2,i] .* R2) .+ (abundnl[3,i] .* R3)
 
-    d = γ * a * b
-    e = γ * a * c
-    f = γ * b * c
+    # add in PPNM term
+    # Xnl[i,:] .= Xnl[i,:] .+ γ .* (Xnl[i,:] .* Xnl[i,:])
 
-    Xnl[i,:] .= (a .* R1) .+ (b .* R2) .+ (c .* R3) .+ (d .* R1 .* R2) .+ (e .* R1 .* R3) .+ (f .* R2 .* R3)
+    # add in bilinear mixing
+    Xnl[i,:] .= Xnl[i,:] .+ γ * (abundnl[1,i] * abundnl[2,i] .* R1 .* R2) + γ * (abundnl[1,i] * abundnl[3,i] .* R1 .* R3) + γ * (abundnl[2,i] * abundnl[3,i] .* R2 .* R3)
+
+    # add in noise
     Xnl[i,:] .= Xnl[i,:] .+ rand(rng, Normal(0, σnoise_nl), length(λs))
+
 end
 
 colnames = Symbol.(["λ_" * lpad(i, 3, "0") for i ∈ 1:length(λs)])
 Xnl = DataFrame(Xnl, colnames);
 
-
+nrow(Xnl)
 
 
 # ---------------------------------------------
@@ -154,11 +170,10 @@ save(joinpath(figpath, "sample-spectra.pdf"), fig)
 
 # fit linear GSM
 k = 75
-m = 10
 λ = 0.001
 Nᵥ = 3
 
-gsm_l = GSM(k=k, m=m, Nv=Nᵥ, λ=λ,  nonlinear=false, linear=true, bias=false, make_positive=true, tol=1e-9, nepochs=100, rand_init=false, rng=StableRNG(42))
+gsm_l = GSMLinear(k=k, Nv=Nᵥ, λ=λ,  make_positive=true, tol=1e-9, nepochs=100, rng=StableRNG(42))
 mach_l = machine(gsm_l, X)
 fit!(mach_l, verbosity=1)
 
@@ -170,7 +185,7 @@ node_means = rpt[:node_data_means]
 Q = rpt[:Q]
 llhs = rpt[:llhs]
 idx_vertices = rpt[:idx_vertices]
-stdev = sqrt(rpt[:β⁻¹])  # 0.04489901084606633
+stdev = sqrt(rpt[:β⁻¹]) # 0.04924632139472682
 
 # plot log likelihoods
 fig = Figure();
@@ -220,7 +235,6 @@ fig
 
 
 
-# so v1 -> blue, v2 -> green, v3 -> red
 
 # evaluate performance using spectral angle
 function spectral_angle(r1, r2)
@@ -232,8 +246,8 @@ function rmse(r1, r2)
 end
 
 function spectral_information_divergence(r1, r2)
-    p = r1 ./ sum(r1)
-    q = r2 ./ sum(r2)
+    p = max.(r1 ./ sum(r1), eps(1.0))
+    q = max.(r2 ./ sum(r2), eps(1.0))
 
     return sum(p .* log.(p ./ q)) + sum(q .* log.(q ./ p))
 end
@@ -241,46 +255,44 @@ end
 
 # Evaluate Endmember accuracy
 
-θ1 = spectral_angle(node_means[:, idx_vertices[1]], R3)
-θ2 = spectral_angle(node_means[:, idx_vertices[2]], R2)
-θ3 = spectral_angle(node_means[:, idx_vertices[3]], R1)
+# so v1 -> green, v2 -> blue, v3 -> red
+res_dict = Dict(
+    "GSM" => Dict(),
+    "R1" => Dict(),
+    "R2" => Dict(),
+    "R3" => Dict(),
+)
 
+res_dict["R1"]["idx"] = idx_vertices[argmin([spectral_angle(node_means[:, idx], R1) for idx ∈ idx_vertices])]
+res_dict["R2"]["idx"] = idx_vertices[argmin([spectral_angle(node_means[:, idx], R2) for idx ∈ idx_vertices])]
+res_dict["R3"]["idx"] = idx_vertices[argmin([spectral_angle(node_means[:, idx], R3) for idx ∈ idx_vertices])]
 
-# 0.02268606690205627
-# 0.005060356035547636
-# 0.011310280096455266
+res_dict["R1"]["θ"] = spectral_angle(node_means[:, res_dict["R1"]["idx"]], R1)
+res_dict["R2"]["θ"] = spectral_angle(node_means[:, res_dict["R2"]["idx"]], R2)
+res_dict["R3"]["θ"] = spectral_angle(node_means[:, res_dict["R3"]["idx"]], R3)
 
+res_dict["R1"]["RMSE"] = rmse(node_means[:, res_dict["R1"]["idx"]], R1)
+res_dict["R2"]["RMSE"] = rmse(node_means[:, res_dict["R2"]["idx"]], R2)
+res_dict["R3"]["RMSE"] = rmse(node_means[:, res_dict["R3"]["idx"]], R3)
 
-rmse1 = rmse(node_means[:, idx_vertices[1]], R3)
-rmse2 = rmse(node_means[:, idx_vertices[2]], R2)
-rmse3 = rmse(node_means[:, idx_vertices[3]], R1)
-
-# 0.006372666002815531
-# 0.004133218515423938
-# 0.007070547363184486
-
-sid1 = spectral_information_divergence(node_means[:, idx_vertices[1]], R3)
-sid2 = spectral_information_divergence(node_means[:, idx_vertices[2]], R2)
-sid3 = spectral_information_divergence(node_means[:, idx_vertices[3]], R1)
-
-# 0.0008944870569942626
-# 3.3577485052296784e-5
-# 0.0006132242550569524
+res_dict["R1"]["SID"] = spectral_information_divergence(node_means[:, res_dict["R1"]["idx"]], R1)
+res_dict["R2"]["SID"] = spectral_information_divergence(node_means[:, res_dict["R2"]["idx"]], R2)
+res_dict["R3"]["SID"] = spectral_information_divergence(node_means[:, res_dict["R3"]["idx"]], R3)
 
 # Evaluate abundance accuracy
-a_rmse_1 = rmse(abund[3,:], abund_l.Z1)
-a_rmse_1 = rmse(abund[2,:], abund_l.Z2)
-a_rmse_1 = rmse(abund[1,:], abund_l.Z3)
+res_dict["R1"]["Abundance RMSE"]= minimum([rmse(abund[idx,:], abund_l.z_1) for idx ∈ 1:Nᵥ])
+res_dict["R2"]["Abundance RMSE"]= minimum([rmse(abund[idx,:], abund_l.z_2) for idx ∈ 1:Nᵥ])
+res_dict["R3"]["Abundance RMSE"]= minimum([rmse(abund[idx,:], abund_l.z_3) for idx ∈ 1:Nᵥ])
 
-# 0.007735307757786526
-# 0.017657189916274397
-# 0.019090156911127594
-
+res_dict["GSM"]["σ̂"] = stdev
+res_dict["GSM"]["σ orignal"] = σnoise
 
 
+open(joinpath(figpath, "result-metrics.json"), "w") do f
+    JSON.print(f, res_dict)
+end
 
 
-# DOES THIS EVEN MAKE SENSE???
 
 # ---------------------------------------------
 # ----------- NONLINEAR MODEL -----------------
@@ -306,10 +318,10 @@ ternaryaxis!(
 
 ternaryscatter!(
     ax,
-    abund[1,:],
-    abund[2,:],
-    abund[3,:],
-    color=[CairoMakie.RGBf(abund[:,i]...) for i ∈ 1:Npoints],
+    abundnl[1,:],
+    abundnl[2,:],
+    abundnl[3,:],
+    color=[CairoMakie.RGBf(abundnl[:,i]...) for i ∈ 1:Npoints],
     marker=:circle,
     markersize = 8,
 )
@@ -332,9 +344,9 @@ fig
 # visualize the data
 fig = Figure();
 ax = Axis(fig[1,1], xlabel="λ", ylabel="Reflectance")
-for i ∈ 1:10:nrow(X)
-    Rᵢ = Array(X[i,:])
-    lines!(ax, λs, Rᵢ, color=CairoMakie.RGBAf(abund[:,i]..., 0.25), linewidth=1)
+for i ∈ 1:10:nrow(Xnl)
+    Rᵢ = Array(Xnl[i,:])
+    lines!(ax, λs, Rᵢ, color=CairoMakie.RGBAf(abundnl[:,i]..., 0.25), linewidth=1)
 end
 xlims!(ax, λs[1], λs[end])
 fig
@@ -345,24 +357,31 @@ save(joinpath(figpath, "sample-spectra.pdf"), fig)
 
 # fit nonlinear GSM
 k = 75
-m = 15
-λ = 0.01
+m = 25
+λ = 0.1
 Nᵥ = 3
+s = 0.1
 
-gsm_l = GSM(k=k, m=m, Nv=Nᵥ, λ=λ,  nonlinear=true, linear=true, bias=false, make_positive=false, tol=1e-5, nepochs=100, rand_init=true, rng=StableRNG(42))
-mach_l = machine(gsm_l, Xnl)
-fit!(mach_l, verbosity=1)
+gsm_nl = GSMNonlinear(k=k, m=m, s=s, λ=λ, make_positive=true, tol=1e-5, nepochs=100, rng=StableRNG(42))
+
+mach_nl = machine(gsm_nl, Xnl)
+fit!(mach_nl, verbosity=1)
 
 
-abund_l = DataFrame(MLJ.transform(mach_l, Xnl));
+abund_nl = DataFrame(MLJ.transform(mach_nl, Xnl));
 
-model = fitted_params(mach_l)[:gsm]
-rpt = report(mach_l)
+model = fitted_params(mach_nl)[:gsm]
+rpt = report(mach_nl)
 node_means = rpt[:node_data_means]
 Q = rpt[:Q]
 llhs = rpt[:llhs]
 idx_vertices = rpt[:idx_vertices]
-stdev = sqrt(rpt[:β⁻¹])  # 0.04489901084606633
+stdev = sqrt(rpt[:β⁻¹])
+
+size(node_means)
+findall(node_means .< 0.0)
+
+
 
 # plot log likelihoods
 fig = Figure();
@@ -401,6 +420,7 @@ for idx ∈ idx_vertices
     push!(ls_fit, li)
     i += 1
 end
+
 
 fig[1,1] = Legend(fig, [l1, l2, l3, ls_fit...], [min_to_use..., "Vertex 1", "Vertex 2", "Vertex 3"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=13, height=-5)
 xlims!(ax, λs[1], λs[end])
