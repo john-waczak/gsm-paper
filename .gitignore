@@ -3,3 +3,8 @@ Manifest.toml
 .CondaPkg
 .ipynb_checkpoints
 data/hysu/original/
+data/
+output/
+.data_old/
+.scripts_old/
+.figures_old/
