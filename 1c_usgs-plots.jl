@@ -1,7 +1,7 @@
 using CairoMakie
 using MLJ, GenerativeTopographicMapping
 using DataFrames, CSV
-using TernaryDiagrams
+# using TernaryDiagrams
 using JSON
 using Distances
 
@@ -199,8 +199,8 @@ sort!(df_nmf_L21, :SNR, rev=true)
 
 # df_gsm_plot[:, [:SNR, :θ]]
 
-extrema(df_linear.reconst_rmse)
-extrema(df_linear.θ)
+# extrema(df_linear.reconst_rmse)
+# extrema(df_linear.θ)
 
 
 # figure out the lambda with the best θ for each SNR
@@ -393,44 +393,44 @@ save(joinpath(figpath, "linear", "extracted-endmembers.png"), fig)
 
 
 
-# visualize the distribution of abundances
-Npoints = length(A1_fit)
+# # visualize the distribution of abundances
+# Npoints = length(A1_fit)
 
-fig = Figure();
-ax = Axis(fig[1, 1], aspect=1);
+# fig = Figure();
+# ax = Axis(fig[1, 1], aspect=1);
 
-ternaryaxis!(
-    ax,
-    hide_triangle_labels=false,
-    hide_vertex_labels=false,
-    labelx_arrow = "Red",
-    label_fontsize=20,
-    tick_fontsize=15,
-)
+# ternaryaxis!(
+#     ax,
+#     hide_triangle_labels=false,
+#     hide_vertex_labels=false,
+#     labelx_arrow = "Red",
+#     label_fontsize=20,
+#     tick_fontsize=15,
+# )
 
-ternaryscatter!(
-    ax,
-    A3_fit[:],
-    A1_fit[:],
-    A2_fit[:],
-    color=[CairoMakie.RGBf(A3_fit[i], A1_fit[i], A2_fit[i]) for i ∈ 1:Npoints],
-    marker=:circle,
-    markersize = 8,
-)
+# ternaryscatter!(
+#     ax,
+#     A3_fit[:],
+#     A1_fit[:],
+#     A2_fit[:],
+#     color=[CairoMakie.RGBf(A3_fit[i], A1_fit[i], A2_fit[i]) for i ∈ 1:Npoints],
+#     marker=:circle,
+#     markersize = 8,
+# )
 
-size(abund)
+# size(abund)
 
-xlims!(ax, -0.2, 1.2) # to center the triangle and allow space for the labels
-ylims!(ax, -0.3, 1.1)
-hidedecorations!(ax) # to hide the axis decorations
+# xlims!(ax, -0.2, 1.2) # to center the triangle and allow space for the labels
+# ylims!(ax, -0.3, 1.1)
+# hidedecorations!(ax) # to hide the axis decorations
 
-text!(ax, Point2f(-0.01, 0.5), text=min_to_use[3], fontsize=22)
-text!(ax, Point2f(0.83, 0.45), text=replace(min_to_use[2], " " => "\n"), fontsize=22)
-text!(ax, Point2f(0.35, -0.175), text=min_to_use[1], fontsize=22)
+# text!(ax, Point2f(-0.01, 0.5), text=min_to_use[3], fontsize=22)
+# text!(ax, Point2f(0.83, 0.45), text=replace(min_to_use[2], " " => "\n"), fontsize=22)
+# text!(ax, Point2f(0.35, -0.175), text=min_to_use[1], fontsize=22)
 
-fig
+# fig
 
-save(joinpath(figpath, "linear", "abundance-orig.png"), fig)
+# save(joinpath(figpath, "linear", "abundance-orig.png"), fig)
 
 
 

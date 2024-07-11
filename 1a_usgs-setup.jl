@@ -4,7 +4,7 @@ using Random, Statistics, LinearAlgebra
 using StableRNGs
 
 
-using CairoMakie, TernaryDiagrams
+using CairoMakie, # TernaryDiagrams
 
 include("./utils/makie-defaults.jl")
 set_theme!(mints_theme)
@@ -167,40 +167,42 @@ CSV.write(joinpath(datapath, "df_abund.csv"), df_abund)
 
 
 # Plot abundance distributions
-fig = Figure();
-ax = Axis(fig[1, 1], aspect=1);
+# fig = Figure();
+# ax = Axis(fig[1, 1], aspect=1);
 
-ternaryaxis!(
-    ax,
-    hide_triangle_labels=false,
-    hide_vertex_labels=false,
-    labelx_arrow = "Red",
-    label_fontsize=20,
-    tick_fontsize=15,
-)
+# ternaryaxis!(
+#     ax,
+#     hide_triangle_labels=false,
+#     hide_vertex_labels=false,
+#     labelx_arrow = "Red",
+#     label_fontsize=20,
+#     tick_fontsize=15,
+# )
 
-ternaryscatter!(
-    ax,
-    abund[1,:],
-    abund[2,:],
-    abund[3,:],
-    color=[CairoMakie.RGBf(abund[:,i]...) for i ∈ 1:Npoints],
-    marker=:circle,
-    markersize = 8,
-)
+# ternaryscatter!(
+#     ax,
+#     abund[1,:],
+#     abund[2,:],
+#     abund[3,:],
+#     color=[CairoMakie.RGBf(abund[:,i]...) for i ∈ 1:Npoints],
+#     marker=:circle,
+#     markersize = 8,
+# )
 
-# the triangle is drawn from (0,0) to (0.5, sqrt(3)/2) to (1,0).
-xlims!(ax, -0.2, 1.2) # to center the triangle and allow space for the labels
-ylims!(ax, -0.3, 1.1)
-hidedecorations!(ax) # to hide the axis decorations
+# # the triangle is drawn from (0,0) to (0.5, sqrt(3)/2) to (1,0).
+# xlims!(ax, -0.2, 1.2) # to center the triangle and allow space for the labels
+# ylims!(ax, -0.3, 1.1)
+# hidedecorations!(ax) # to hide the axis decorations
 
-text!(ax, Point2f(-0.01, 0.5), text=min_to_use[3], fontsize=22)
-text!(ax, Point2f(0.83, 0.45), text=replace(min_to_use[2], " " => "\n"), fontsize=22)
-text!(ax, Point2f(0.35, -0.175), text=min_to_use[1], fontsize=22)
+# text!(ax, Point2f(-0.01, 0.5), text=min_to_use[3], fontsize=22)
+# text!(ax, Point2f(0.83, 0.45), text=replace(min_to_use[2], " " => "\n"), fontsize=22)
+# text!(ax, Point2f(0.35, -0.175), text=min_to_use[1], fontsize=22)
 
-save(joinpath(figpath, "abundance-orig.png"), fig)
+# save(joinpath(figpath, "abundance-orig.png"), fig)
 
-fig
+# fig
+
+
 
 # create plot of original endmembers
 fig = Figure();
