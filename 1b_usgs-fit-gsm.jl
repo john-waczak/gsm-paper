@@ -39,8 +39,10 @@ snrs = [split(split(splitext(csv)[1], "_")[2], "-")[2] for csv ∈ csvs]
 stds = [parse(Float64, split(split(splitext(csv)[1], "_")[3], "-")[2]) for csv ∈ csvs]
 
 
-k = 75
-λs = [0.00001, 0.0001, 0.001, 0.01, 0.1]
+# k = 75
+k = 25
+# λs = [0.00001, 0.0001, 0.001, 0.01, 0.1]
+λs = [0.001,]
 Nᵥ = 3
 
 
