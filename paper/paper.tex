@@ -172,8 +172,17 @@ Hanson Center for Space Sciences, University of Texas at Dallas, Richardson, TX 
     - Discuss identification of non-linearity \textit{strength} via regularization parameter and BIC.
     - reconstruction rmse can also be used to evaluate the relative performance for fixed model size (i.e. k and m) with varying regularization strength
 
-- Discuss  extensions to the GSM
-    - batch training as outlined in Bishop paper, extensions to noise model to allow adaptive uncertainty for each wavelength bin
+- Limitations of the GSM
+    - slow training due to computation of dinstance matrix between full dataset and embedding space
+    - An incremental version of the EM procedure as described in \cite{gtm-developments} can speed this up by considering batches $X_b$ of $X$ and performing only a partial E-step by updating responsibilities corresponding to the data batch
+    - However, M step still involves the "full" responsibility matrix. 
+    - This can be addressed by taking an ensembling approach as described in \cite{parallel-gtm} where multiple GTM are trained on subsets of $X$ and the results are averaged. 
+    - More generally, we may consider a mixture-of-GTMs as briefly desribed in \cite{gtm-orig} whereby the overall density is given as 
+    \begin{equation}
+        p(\mathbf{x}) = \sum_r P(r)p(\mathbf{x}\vert r)
+    \end{equation}
+    where there are $r$ individual GTM models with mixing coefficients $P(r)$ such that $\sum_r P(r) =1$
+
 
 - Discuss other applications of the GSM
     - Optimal route planning for in-situ data collection based on prize-collecting travelling salesman problem, i.e. construct a route which maximizies area traversed in GSM latent space (e.g. the n-simplex). 
