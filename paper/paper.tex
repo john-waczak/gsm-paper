@@ -127,14 +127,66 @@ Hanson Center for Space Sciences, University of Texas at Dallas, Richardson, TX 
 
 5. Summary of paper structure
 
+\newpage
 
 \section{Generative Simplex Mapping}
 \subsection{Method Derivation}
+
+\begin{equation}\label{eqn:data-space-distribution}
+    p(x \mid z, \mathbf{W}, \beta) = \left(\frac{\beta}{2\pi} \right)^{D/2}\exp\left( -\frac{\beta}{2}\lVert \psi(z; \mathbf{W}) - x \rVert^2 \right)
+\end{equation}
+
+\begin{equation}\label{eqn:latent-distribution}
+    p(z) = \sum\limits_k^K \pi_k \, \delta(z - z_k) \quad\text{where}\quad  \sum_k^K\pi_k = 1
+\end{equation}
+
+\begin{equation}\label{eqn:llh}
+    \mathcal{L}(\mathbf{W}, \beta) = \sum\limits_n^N \ln \left( \sum\limits_k^K \pi_k \, p(x_n \mid z_k, \mathbf{W}, \beta) \right)
+\end{equation}
+
+The activation function $\mathbf{\Phi}_{km} = \phi_m(z_k)$ is chosen to enable modeling linear and nonlinear mixing. For $m \leq N_v$, we take $\Phi_{km} = z_k$. For $m > N_v$, we set
+\begin{equation}\label{eq:act-function}
+    \mathbf{\Phi}_{km} = \begin{cases}
+        \frac{s - \lVert z_k - \mu_m \rVert}{s}; & \lVert z_k - \mu_m \rVert \leq s \\
+        0; & \lVert z_k - \mu_m \rVert > s
+    \end{cases}
+\end{equation}
+The activation function centers $\mu_m$ are selected to be greater than 
+
+We include a prior distribution on model weights to enable
+\begin{align}\label{eq:weight-prior}
+\begin{split}
+    p(\mathbf{W} \mid \lambda_e, \lambda_w) &= \left(\frac{\lambda_e}{2\pi}\right)^{\frac{D\,N_v}{2}}\exp\left(-\frac{\lambda_e}{2}\sum\limits_d^D\sum\limits_{m=1}^{N_v}\mathbf{W}_{dm}^2 \right)\\ 
+    & \qquad \cdot \left(\frac{\lambda_w}{2\pi}\right)^{\frac{D(M-N_v)}{2}}\exp\left(-\frac{\lambda_w}{2}\sum\limits_d^D\sum_{m=N_v+1}^M \mathbf{W}_{dm}^2\right)
+\end{split}
+\end{align}
+
+\begin{equation}\label{eq:responsibility}
+    R_{kn}  = p(z_k \mid x_n, \mathbf{W}, \beta) = \dfrac{p(x_n \mid z_k, \mathbf{W}, \beta)}{\sum\limits_{k'}^K p(x_n \mid z_{k'}, \mathbf{W}, \beta)}
+\end{equation}
+
+Penalized complete-data log likelihood
+\begin{adjustwidth}{-\extralength}{0cm}
+\begin{equation}\label{eq:complete-data-llh}
+    Q = \sum\limits_n^N\sum\limits_k^K R_{kn} \left(\ln\pi_k + \frac{D}{2}\ln\left(\frac{\beta}{2\pi}\right) - \frac{\beta}{2}\sum\limits_d^D\left(\sum\limits_m^M \mathbf{W}_{dm}\mathbf{\Phi}_{km} - \mathbf{X}_{nd}\right)^2\right) + \frac{MD}{2}\ln\left(\frac{\lambda}{2\pi}\right) - \frac{\lambda}{2}\sum\limits_d^D \sum\limits_m^M \mathbf{W}_{dm}^2
+\end{equation}
+\end{adjustwidth}
+
+
+\begin{equation}\label{eq:pi-update}
+    \pi_k^{\text{new}}  = \frac{1}{N}\sum_n R_{kn}
+\end{equation}
+
+\begin{equation}\label{eq:beta-update}
+    \frac{1}{\beta^{\text{new}}}  = \frac{1}{ND}\sum\limits_n^N\sum\limits_k^K R_{kn}\lVert \psi(z_k; \mathbf{W}) - x_n \rVert^2
+\end{equation}
 
 - multiplicative updated to guarantee non-negativity (Generalized EM procedure)
 - sum-to-one constraint is guaranteed via representation of latent space with barycentric coordinates.
 
 \subsection{Implementation Details}
+
+The mixing coefficients are initially chosen so that $\pi_k = \frac{1}{K}$.
 
 - Linear Method
 
