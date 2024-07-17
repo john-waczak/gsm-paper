@@ -4,9 +4,10 @@ using Random, Statistics, LinearAlgebra
 using StableRNGs
 
 
-using CairoMakie, # TernaryDiagrams
+using CairoMakie #, TernaryDiagrams
 
 include("./utils/makie-defaults.jl")
+
 set_theme!(mints_theme)
 update_theme!(
     figure_padding=30,
@@ -39,9 +40,9 @@ if !ispath(joinpath(datapath, "linear"))
     mkpath(joinpath(datapath, "linear"))
 end
 
-if !ispath(joinpath(datapath, "bilinear"))
-    mkpath(joinpath(datapath, "bilinear"))
-end
+# if !ispath(joinpath(datapath, "bilinear"))
+#     mkpath(joinpath(datapath, "bilinear"))
+# end
 
 
 figpath = "./figures/1_usgs"
@@ -53,9 +54,9 @@ if !ispath(joinpath(figpath, "linear"))
     mkpath(joinpath(figpath, "linear"))
 end
 
-if !ispath(joinpath(figpath, "bilinear"))
-    mkpath(joinpath(figpath, "bilinear"))
-end
+# if !ispath(joinpath(figpath, "bilinear"))
+#     mkpath(joinpath(figpath, "bilinear"))
+# end
 
 
 outpath = "./output/1_usgs"
@@ -67,9 +68,9 @@ if !ispath(joinpath(outpath, "linear"))
     mkpath(joinpath(outpath, "linear"))
 end
 
-if !ispath(joinpath(outpath, "bilinear"))
-    mkpath(joinpath(outpath, "bilinear"))
-end
+# if !ispath(joinpath(outpath, "bilinear"))
+#     mkpath(joinpath(outpath, "bilinear"))
+# end
 
 
 
@@ -216,6 +217,7 @@ fig[1,1] = Legend(fig, [l1, l2, l3], [min_to_use...,], framevisible=false, orien
 xlims!(ax, λs[1], λs[end])
 
 save(joinpath(figpath, "endmembers-orig.png"), fig)
+save(joinpath(figpath, "endmembers-orig.svg"), fig)
 
 fig
 
