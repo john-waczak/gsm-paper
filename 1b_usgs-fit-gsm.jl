@@ -69,7 +69,7 @@ for i ∈ 1:length(csvs)
     println("\n------- Euclidean -----\n")
     nmf = NMF(k=Nᵥ, cost=:Euclidean, normalize_abundance=true, tol=1e-9, maxiters=1000, rng=StableRNG(42))
     mach = machine(nmf, df)
-    fit!(mach, verbosity=1)
+    fit!(mach, verbosity=0)
 
     fp = fitted_params(mach)
     H = fp.H
@@ -136,7 +136,7 @@ for i ∈ 1:length(csvs)
     println("\n------- KL -----------\n")
     nmf = NMF(k=Nᵥ, cost=:KL, normalize_abundance=true, tol=1e-9, maxiters=1000, rng=StableRNG(42))
     mach = machine(nmf, df)
-    fit!(mach, verbosity=1)
+    fit!(mach, verbosity=0)
 
     fp = fitted_params(mach)
     H = fp.H
@@ -204,7 +204,7 @@ for i ∈ 1:length(csvs)
 
     nmf = NMF(k=Nᵥ, cost=:L21, normalize_abundance=true, tol=1e-9, maxiters=1000, rng=StableRNG(42))
     mach = machine(nmf, df)
-    fit!(mach, verbosity=1)
+    fit!(mach, verbosity=0)
 
     fp = fitted_params(mach)
     H = fp.H
@@ -269,7 +269,7 @@ end
 
 
 
-# GSM
+# GSM Linear
 for i ∈ 1:length(csvs)
     csv = csvs[i]
     snr = snrs[i]
@@ -290,7 +290,7 @@ for i ∈ 1:length(csvs)
         println("\tλ = $(λ)\n")
         gsm = GSMLinear(k=k, Nv=Nᵥ, λ=λ, tol=1e-9, nepochs=500, niters=100, rng=StableRNG(42))
         mach = machine(gsm, df)
-        fit!(mach, verbosity=1)
+        fit!(mach, verbosity=0)
 
         Yorig = Matrix(df)
         Ŷ = data_reconstruction(mach, df)
@@ -313,6 +313,12 @@ for i ∈ 1:length(csvs)
         res_dict["σ_orignal"] = σnoise
         res_dict["SNR"] = snr
         res_dict["λ"] = λ
+
+        W = rpt[:W]
+        res_dict["W_min"] = minimum(W)
+        res_dict["W_mean"] = mean(W)
+        res_dict["W_median"] = median(W)
+        res_dict["W_max"] = maximum(W)
 
 
         res_dict["θ"] = mean([
@@ -362,7 +368,7 @@ for i ∈ 1:length(csvs)
 
         gsm = GSMBigLinear(n_nodes=n_nodes, Nv=Nᵥ, λ=λ, tol=1e-9, nepochs=500, niters=100, rng=StableRNG(42))
         mach = machine(gsm, df)
-        fit!(mach, verbosity=1)
+        fit!(mach, verbosity=0)
 
         Yorig = Matrix(df)
         Ŷ = data_reconstruction(mach, df)
@@ -386,6 +392,11 @@ for i ∈ 1:length(csvs)
         res_dict["SNR"] = snr
         res_dict["λ"] = λ
 
+        W = rpt[:W]
+        res_dict["W_min"] = minimum(W)
+        res_dict["W_mean"] = mean(W)
+        res_dict["W_median"] = median(W)
+        res_dict["W_max"] = maximum(W)
 
         res_dict["θ"] = mean([
             minimum([spectral_angle(node_means[:, idx], R1) for idx ∈ idx_vertices]),
@@ -425,8 +436,182 @@ for i ∈ 1:length(csvs)
             JSON.print(f, res_dict)
         end
     end
+end
 
 
+
+k = 25
+m = 10
+# ss = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+λe_s = [0.001,]
+#λw_s = [1000.0, 100.0, 10.0, 1.0]
+λw_s = [1000.0,]
+Nᵥ = 3
+
+
+# GSM Nonlinear (COMBO)
+for i ∈ 1:length(csvs)
+    csv = csvs[i]
+    snr = snrs[i]
+    σnoise = stds[i]
+
+    println("\nWorking on SNR = $(snr)")
+
+    # create new folder for each SNR
+    opath = joinpath(outpath, "linear", snr)
+    if !ispath(opath)
+        mkpath(opath)
+    end
+
+    # load in data
+    df = CSV.read(joinpath(dpath, csv), DataFrame)
+
+    for λe ∈ λe_s
+        for λw ∈ λw_s
+            println("\tλe = $(λe)\tλw = $(λw)")
+            gsm = GSMCombo(k=k, m=m, Nv=Nᵥ, λe=λe, λw=λw, tol=1e-9, nepochs=500, niters=100, rng=StableRNG(42))
+            mach = machine(gsm, df)
+            fit!(mach, verbosity=0)
+
+            Yorig = Matrix(df)
+            Ŷ = data_reconstruction(mach, df)
+
+            # generate report
+            rpt = report(mach)
+
+            node_means = rpt[:node_data_means]
+            idx_vertices = rpt[:idx_vertices]
+            abund_out = DataFrame(MLJ.transform(mach, df));
+
+            res_dict = Dict()
+            res_dict[:Q] = rpt[:Q]
+            res_dict[:llhs] = rpt[:llhs]
+            res_dict[:converged] = rpt[:converged]
+            res_dict[:AIC] = rpt[:AIC]
+            res_dict[:BIC] = rpt[:BIC]
+
+            res_dict["σ_fit"] = sqrt(rpt[:β⁻¹])
+            res_dict["σ_orignal"] = σnoise
+            res_dict["SNR"] = snr
+            res_dict["λe"] = λe
+            res_dict["λw"] = λw
+            res_dict["W"] = rpt[:W]
+
+            res_dict["θ"] = mean([
+                minimum([spectral_angle(node_means[:, idx], R1) for idx ∈ idx_vertices]),
+                minimum([spectral_angle(node_means[:, idx], R2) for idx ∈ idx_vertices]),
+                minimum([spectral_angle(node_means[:, idx], R3) for idx ∈ idx_vertices]),
+            ])
+
+            res_dict["RMSE"] = mean([
+                minimum([rmse(node_means[:, idx], R1) for idx ∈ idx_vertices]),
+                minimum([rmse(node_means[:, idx], R2) for idx ∈ idx_vertices]),
+                minimum([rmse(node_means[:, idx], R3) for idx ∈ idx_vertices]),
+            ])
+
+            res_dict["SID"] = mean([
+                minimum([spectral_information_divergence(node_means[:, idx], R1) for idx ∈ idx_vertices]),
+                minimum([spectral_information_divergence(node_means[:, idx], R2) for idx ∈ idx_vertices]),
+                minimum([spectral_information_divergence(node_means[:, idx], R3) for idx ∈ idx_vertices]),
+            ])
+
+            res_dict["Abundance RMSE"] = mean([
+                minimum([rmse(abund_out[:,idx], abund.R1) for idx ∈ 1:3]),
+                minimum([rmse(abund_out[:,idx], abund.R2) for idx ∈ 1:3]),
+                minimum([rmse(abund_out[:,idx], abund.R3) for idx ∈ 1:3]),
+            ])
+
+            res_dict["Reconstruction RMSE"] = rmse(Ŷ, Yorig)
+
+            res_dict["Vertex_1"] = node_means[:, idx_vertices[1]]
+            res_dict["Vertex_2"] = node_means[:, idx_vertices[2]]
+            res_dict["Vertex_3"] = node_means[:, idx_vertices[3]]
+
+            res_dict["Abundance_1"] = abund_out[:,1]
+            res_dict["Abundance_2"] = abund_out[:,2]
+            res_dict["Abundance_3"] = abund_out[:,3]
+
+            open(joinpath(opath, "fit-results-gsm-combo_λe-$(λe)_λw-$(λw).json"), "w") do f
+                JSON.print(f, res_dict)
+            end
+        end
+     end
+
+
+    for λe ∈ λe_s
+        for λw ∈ λw_s
+            println("\tλe = $(λe)\tλw = $(λw)")
+
+            n_nodes = binomial(k + Nᵥ - 2, Nᵥ -1)
+            n_rbfs = binomial(m + Nᵥ - 2, Nᵥ -1) - Nᵥ
+
+            gsm = GSMBigCombo(n_nodes=n_nodes, n_rbfs=n_rbfs, Nv=Nᵥ, λe=λe, λw=λw, tol=1e-9, nepochs=500, niters=100, rng=StableRNG(42))
+            mach = machine(gsm, df)
+            fit!(mach, verbosity=0)
+
+            Yorig = Matrix(df)
+            Ŷ = data_reconstruction(mach, df)
+
+            # generate report
+            rpt = report(mach)
+
+            node_means = rpt[:node_data_means]
+            idx_vertices = rpt[:idx_vertices]
+            abund_out = DataFrame(MLJ.transform(mach, df));
+
+            res_dict = Dict()
+            res_dict[:Q] = rpt[:Q]
+            res_dict[:llhs] = rpt[:llhs]
+            res_dict[:converged] = rpt[:converged]
+            res_dict[:AIC] = rpt[:AIC]
+            res_dict[:BIC] = rpt[:BIC]
+
+            res_dict["σ_fit"] = sqrt(rpt[:β⁻¹])
+            res_dict["σ_orignal"] = σnoise
+            res_dict["SNR"] = snr
+            res_dict["λe"] = λe
+            res_dict["λw"] = λw
+            res_dict["W"] = rpt[:W]
+
+            res_dict["θ"] = mean([
+                minimum([spectral_angle(node_means[:, idx], R1) for idx ∈ idx_vertices]),
+                minimum([spectral_angle(node_means[:, idx], R2) for idx ∈ idx_vertices]),
+                minimum([spectral_angle(node_means[:, idx], R3) for idx ∈ idx_vertices]),
+            ])
+
+            res_dict["RMSE"] = mean([
+                minimum([rmse(node_means[:, idx], R1) for idx ∈ idx_vertices]),
+                minimum([rmse(node_means[:, idx], R2) for idx ∈ idx_vertices]),
+                minimum([rmse(node_means[:, idx], R3) for idx ∈ idx_vertices]),
+            ])
+
+            res_dict["SID"] = mean([
+                minimum([spectral_information_divergence(node_means[:, idx], R1) for idx ∈ idx_vertices]),
+                minimum([spectral_information_divergence(node_means[:, idx], R2) for idx ∈ idx_vertices]),
+                minimum([spectral_information_divergence(node_means[:, idx], R3) for idx ∈ idx_vertices]),
+            ])
+
+            res_dict["Abundance RMSE"] = mean([
+                minimum([rmse(abund_out[:,idx], abund.R1) for idx ∈ 1:3]),
+                minimum([rmse(abund_out[:,idx], abund.R2) for idx ∈ 1:3]),
+                minimum([rmse(abund_out[:,idx], abund.R3) for idx ∈ 1:3]),
+            ])
+
+            res_dict["Reconstruction RMSE"] = rmse(Ŷ, Yorig)
+
+            res_dict["Vertex_1"] = node_means[:, idx_vertices[1]]
+            res_dict["Vertex_2"] = node_means[:, idx_vertices[2]]
+            res_dict["Vertex_3"] = node_means[:, idx_vertices[3]]
+
+            res_dict["Abundance_1"] = abund_out[:,1]
+            res_dict["Abundance_2"] = abund_out[:,2]
+            res_dict["Abundance_3"] = abund_out[:,3]
+
+            open(joinpath(opath, "fit-results-gsm-big-combo_λe-$(λe)_λw-$(λw).json"), "w") do f
+                JSON.print(f, res_dict)
+            end
+        end
+     end
 end
 
 

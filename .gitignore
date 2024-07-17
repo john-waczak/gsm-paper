@@ -8,3 +8,4 @@ output/
 .data_old/
 .scripts_old/
 .figures_old/
+*.key

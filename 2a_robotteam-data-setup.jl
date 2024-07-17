@@ -123,52 +123,73 @@ function get_h5_data(h5path, Δx = 0.1, skip_size = 5)
 end
 
 
-dfs = []
+dfs_dye = []
+dfs_nodye = []
+
 
 # loop over files and produce dataframes
 for (day, collections) in files_dict
     for (collection , files) in collections
         for f in files
-            println("Working on $(f)")
-            df = get_h5_data(f)
-            push!(dfs, df)
+            if collection == "dye"
+                println("Working on $(f)")
+                df = get_h5_data(f)
+                push!(dfs_dye, df)
+            else
+                println("Working on $(f)")
+                df = get_h5_data(f)
+                push!(dfs_nodye, df)
+            end
         end
     end
 end
 
 
-df_out = vcat(dfs...);
+df_dye = vcat(dfs_dye...);
+df_nodye = vcat(dfs_nodye...);
+
+# keep only water pixels
+idx_nw_dye = findall(df_dye.NDWI1 .≥ 0.25)
+idx_nw_nodye = findall(df_nodye.NDWI1 .≥ 0.25)
+
+df_dye_features = df_dye[idx_nw_dye, 1:idx_900]
+df_dye_targets = df_dye[idx_nw_dye, 463:end]
+
+df_nodye_features = df_nodye[idx_nw_nodye, 1:idx_900]
+df_nodye_targets = df_nodye[idx_nw_nodye, 463:end]
 
 
-df_features = df_out[:, 1:idx_900];
-df_targets = df_out[:, 463:end];
-
-CSV.write(joinpath(dye_path, "df_features.csv"), df_features)
-CSV.write(joinpath(dye_path, "df_targets.csv"), df_targets)
-
-
-idx_nw = findall(df_targets.NDWI1 .≥ 0.25)
-
-CSV.write(joinpath(dye_path, "df_features-nw.csv"),df_features[idx_nw, :])
-CSV.write(joinpath(dye_path, "df_targets-nw.csv"),df_targets[idx_nw, :])
+# save the data
+CSV.write(joinpath(dye_path, "df_dye_features.csv"), df_dye_features)
+CSV.write(joinpath(dye_path, "df_dye_targets.csv"), df_dye_targets)
+CSV.write(joinpath(dye_path, "df_nodye_features.csv"), df_nodye_features)
+CSV.write(joinpath(dye_path, "df_nodye_targets.csv"), df_nodye_targets)
 
 
 # load in supervised data
 df_sup = CSV.read("/Users/johnwaczak/data/robot-team/finalized/Full/df_11_23.csv", DataFrame)
 
-
 # pinch to desired wavelengths
-df_sup_features = df_sup[:, 1:idx_900]
-df_sup_targets = df_sup[:, 463:end]
+idx_nw = findall(df_sup.NDWI1 .≥ 0.25)
+df_sup_features = df_sup[idx_nw, 1:idx_900]
+df_sup_targets = df_sup[idx_nw, 463:end]
 
 
 CSV.write(joinpath(sup_path, "df_features.csv"), df_sup_features)
 CSV.write(joinpath(sup_path, "df_targets.csv"), df_sup_targets)
 
 
-# create joined dataset
-df_gsm = vcat(df_features[idx_nw,:], df_sup_features)
+# create joined dataset with 20_000 total datapoints
+nrow(df_dye_features) + nrow(df_sup_features)
 
+using Random
+using StableRNGs
+
+rng = StableRNG(42)
+idx_dye = shuffle(rng, 1:nrow(df_dye_features))[1:10_000]
+idx_sup = shuffle(rng, 1:nrow(df_sup_features))[1:10_000]
+
+df_gsm = vcat(df_dye_features[idx_dye,:], df_sup_features[idx_sup, :])
 CSV.write(joinpath(datapath, "df_features.csv"), df_gsm)
 
 
