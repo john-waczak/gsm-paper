@@ -72,10 +72,10 @@ n_rbfs = 250
 # Nv_s = [3, 4, 5, 6, 7, 8, 9]
 
 
-Nv_s = [3, 4, 5, 6, 7, 8, 9, 10]
+Nv_s = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 s = 1/10
-λe_s = [0.01, 0.001, 0.0001]
-λw_s = [10_000, 1_000, 100, 10, 1]
+λe_s = [0.01, 0.001, 0.0001, 0.00001]
+λw_s = [10_000, 1_000, 100, 10, 1, 0.1]
 
 println("\tNumber of models to train: ", length(Nv_s) * length(λe_s) * length(λw_s))
 println("\tTraiing models...")
@@ -159,18 +159,31 @@ CSV.write(joinpath("./output/robot-team/", "df_results.csv"), df_res)
 
 
 
+unique(df_res.λe)
+unique(df_res.λw)
+names(df_res)
 
 # Identify the best Nv via BIC, AIC, Q, LLH
-gdf = groupby(df_res, :Nv)
 
-df_Q = combine(gdf, :Q => maximum)
-df_llh = combine(gdf, :llhs => maximum)
-df_BIC = combine(gdf, :BIC => minimum)
-df_AIC = combine(gdf, :AIC => minimum)
+df_res[argmax(df_res.Q), [:Q, :Nv, :λe, :λw]]
+df_res[argmax(df_res.llhs),  [:llhs, :Nv, :λe, :λw]]
+df_res[argmin(df_res.BIC), [:BIC, :Nv, :λe, :λw]]
+df_res[argmin(df_res.AIC), [:AIC, :Nv, :λe, :λw]]
 
-Nv_Q = df_Q[argmax(df_Q.Q_maximum), :Nv]
-Nv_llh = df_llh[argmax(df_llh.llhs_maximum), :Nv]
-Nv_BIC = df_BIC[argmin(df_BIC.BIC_minimum), :Nv]
-Nv_AIC = df_AIC[argmin(df_AIC.AIC_minimum), :Nv]
+
+# gdf = groupby(df_res, :Nv)
+# df_Q = combine(gdf, :Q => maximum)
+# df_llh = combine(gdf, :llhs => maximum)
+# df_BIC = combine(gdf, :BIC => minimum)
+# df_AIC = combine(gdf, :AIC => minimum)
+
+# Nv_Q = df_Q[argmax(df_Q.Q_maximum), :Nv]
+# Nv_llh = df_llh[argmax(df_llh.llhs_maximum), :Nv]
+# Nv_BIC = df_BIC[argmin(df_BIC.BIC_minimum), :Nv]
+# Nv_AIC = df_AIC[argmin(df_AIC.AIC_minimum), :Nv]
+
+# df_Q
+
+
 
 
