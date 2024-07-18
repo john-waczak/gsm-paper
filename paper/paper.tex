@@ -162,23 +162,23 @@ We include a prior distribution on model weights to enable
 \end{align}
 
 \begin{equation}\label{eq:responsibility}
-    R_{kn}  = p(z_k \mid x_n, \mathbf{W}, \beta) = \dfrac{p(x_n \mid z_k, \mathbf{W}, \beta)}{\sum\limits_{k'}^K p(x_n \mid z_{k'}, \mathbf{W}, \beta)}
+    \mathbf{R}_{kn}  = p(z_k \mid x_n, \mathbf{W}, \beta) = \dfrac{p(x_n \mid z_k, \mathbf{W}, \beta)}{\sum\limits_{k'}^K p(x_n \mid z_{k'}, \mathbf{W}, \beta)}
 \end{equation}
 
 Penalized complete-data log likelihood
 \begin{adjustwidth}{-\extralength}{0cm}
 \begin{equation}\label{eq:complete-data-llh}
-    Q = \sum\limits_n^N\sum\limits_k^K R_{kn} \left(\ln\pi_k + \frac{D}{2}\ln\left(\frac{\beta}{2\pi}\right) - \frac{\beta}{2}\sum\limits_d^D\left(\sum\limits_m^M \mathbf{W}_{dm}\mathbf{\Phi}_{km} - \mathbf{X}_{nd}\right)^2\right) + \frac{MD}{2}\ln\left(\frac{\lambda}{2\pi}\right) - \frac{\lambda}{2}\sum\limits_d^D \sum\limits_m^M \mathbf{W}_{dm}^2
+    Q = \sum\limits_n^N\sum\limits_k^K \mathbf{R}_{kn} \left(\ln\pi_k + \frac{D}{2}\ln\left(\frac{\beta}{2\pi}\right) - \frac{\beta}{2}\sum\limits_d^D\left(\sum\limits_m^M \mathbf{W}_{dm}\mathbf{\Phi}_{km} - \mathbf{X}_{nd}\right)^2\right) + \frac{MD}{2}\ln\left(\frac{\lambda}{2\pi}\right) - \frac{\lambda}{2}\sum\limits_d^D \sum\limits_m^M \mathbf{W}_{dm}^2
 \end{equation}
 \end{adjustwidth}
 
 
 \begin{equation}\label{eq:pi-update}
-    \pi_k^{\text{new}}  = \frac{1}{N}\sum_n R_{kn}
+    \pi_k^{\text{new}}  = \frac{1}{N}\sum_n \mathbf{R}_{kn}
 \end{equation}
 
 \begin{equation}\label{eq:beta-update}
-    \frac{1}{\beta^{\text{new}}}  = \frac{1}{ND}\sum\limits_n^N\sum\limits_k^K R_{kn}\lVert \psi(z_k; \mathbf{W}) - x_n \rVert^2
+    \frac{1}{\beta^{\text{new}}}  = \frac{1}{ND}\sum\limits_n^N\sum\limits_k^K \mathbf{R}_{kn}\lVert \psi(z_k; \mathbf{W}) - x_n \rVert^2
 \end{equation}
 
 - multiplicative updated to guarantee non-negativity (Generalized EM procedure)
