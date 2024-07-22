@@ -445,7 +445,7 @@ m = 10
 # ss = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
 λe_s = [0.001,]
 #λw_s = [1000.0, 100.0, 10.0, 1.0]
-λw_s = [1000.0,]
+λw_s = [1.0, 100.0]
 Nᵥ = 3
 
 
@@ -495,7 +495,13 @@ for i ∈ 1:length(csvs)
             res_dict["SNR"] = snr
             res_dict["λe"] = λe
             res_dict["λw"] = λw
-            res_dict["W"] = rpt[:W]
+
+            W = rpt[:W]
+            res_dict["W"] = W
+            res_dict["W_min"] = minimum(W[:, Nᵥ+1:end])
+            res_dict["W_mean"] = mean(W[:, Nᵥ+1:end])
+            res_dict["W_median"] = median(W[:, Nᵥ+1:end])
+            res_dict["W_max"] = maximum(W[:, Nᵥ+1:end])
 
             res_dict["θ"] = mean([
                 minimum([spectral_angle(node_means[:, idx], R1) for idx ∈ idx_vertices]),
@@ -571,7 +577,15 @@ for i ∈ 1:length(csvs)
             res_dict["SNR"] = snr
             res_dict["λe"] = λe
             res_dict["λw"] = λw
-            res_dict["W"] = rpt[:W]
+
+            W = rpt[:W]
+            res_dict["W"] = W
+            res_dict["W_min"] = minimum(W[:, Nᵥ+1:end])
+            res_dict["W_mean"] = mean(W[:, Nᵥ+1:end])
+            res_dict["W_median"] = median(W[:, Nᵥ+1:end])
+            res_dict["W_max"] = maximum(W[:, Nᵥ+1:end])
+
+
 
             res_dict["θ"] = mean([
                 minimum([spectral_angle(node_means[:, idx], R1) for idx ∈ idx_vertices]),
@@ -613,5 +627,6 @@ for i ∈ 1:length(csvs)
         end
      end
 end
+
 
 

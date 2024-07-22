@@ -61,17 +61,20 @@ fig
 save(joinpath(figpath, "pca-variance.png"), fig)
 
 
-
+fig
 # Based on this, between 4-8 endmembers should be fine
 n_nodes = 3000
 n_rbfs = 250
 
 
 #k = 25 # this roughly corresponds to 3000 nodes
-Nv_s = [2, 3, 4, 5, 6, 7, 8]
+# Nv_s = [2, 3, 4, 5, 6, 7, 8]
+Nv_s = [3, 4, 5, 6, 7, 8]
 s = 1/10
-λe_s = [0.1, 0.01, 0.001, 0.0001, 0.00001]
-λw_s = [10_000, 1_000, 100, 10, 1, 0.1, 0.01, 0.001]
+# λe_s = [0.1, 0.01, 0.001, 0.0001, 0.00001]
+# λw_s = [10_000, 1_000, 100, 10, 1, 0.1, 0.01, 0.001]
+λe_s = [0.1, 0.01, 0.001,]
+λw_s = [100, 10, 1, 0.1,]
 
 
 println("\tNumber of models to train: ", length(Nv_s) * length(λe_s) * length(λw_s))
@@ -171,6 +174,7 @@ df_res_1000[argmin(df_res_1000.BIC), [:BIC, :Nv, :λe]]
 df_res_100 = df_res[(df_res.λw .== 100), :]
 df_res_100[argmin(df_res_100.Q), [:Q, :Nv, :λe]]
 df_res_100[argmin(df_res_100.BIC), [:BIC, :Nv, :λe]]
+
 
 
 

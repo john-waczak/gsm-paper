@@ -253,8 +253,8 @@ CSV.write(joinpath(respath, "df_nmf_L21.csv"), df_nmf_L21)
 # let's just take λ = 0.001
 df_gsm_plot = df_gsm[df_gsm.λ .== 0.001, :]
 df_gsm_big_plot = df_gsm_big[df_gsm_big.λ .== 0.001, :]
-df_gsm_combo_plot = df_gsm_combo[df_gsm_combo.λe .== 0.001 .&& df_gsm_combo.λw .== 1000.0, :]
-df_gsm_big_combo_plot = df_gsm_big_combo[df_gsm_big_combo.λe .== 0.001 .&& df_gsm_big_combo.λw .== 1000.0, :]
+df_gsm_combo_plot = df_gsm_combo[df_gsm_combo.λe .== 0.001 .&& df_gsm_combo.λw .== 100.0, :]
+df_gsm_big_combo_plot = df_gsm_big_combo[df_gsm_big_combo.λe .== 0.001 .&& df_gsm_big_combo.λw .== 100.0, :]
 
 
 # sort everything by SNR
@@ -276,11 +276,11 @@ df_gsm_big_combo_plot[:, [:SNR, :θ, :abund_rmse, :reconst_rmse]]
 fig = Figure(; px_per_unit=30);
 ax = Axis(fig[2,1], xlabel="SNR (dB)", ylabel="Mean Spectral Angle (degrees)", xticks=(1:9, ["∞", "35", "30", "25", "20", "15", "10", "5", "0"]), xminorgridvisible=false, yminorgridvisible=false);
 
-l_gsm = scatter!(ax, 1:9, df_gsm_plot[:, :θ], markersize=15, color=:green)
-lines!(ax, 1:9, df_gsm_big_combo_plot[:, :θ], linewidth=3, linestyle=:dash, color=:green)
+l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :θ], markersize=15, color=:green)
+lines!(ax, 1:9, df_gsm_combo_plot[:, :θ], linewidth=3, linestyle=:dash, color=:green)
 
-l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :θ], markersize=15, color=mints_colors[1], marker=:utriangle)
-lines!(ax, 1:9, df_gsm_combo_plot[:, :θ], linewidth=3, linestyle=:dash, color=mints_colors[1])
+l_gsm_big_combo = scatter!(ax, 1:9, df_gsm_big_combo_plot[:, :θ], markersize=15, color=mints_colors[1], marker=:utriangle)
+lines!(ax, 1:9, df_gsm_big_combo_plot[:, :θ], linewidth=3, linestyle=:dash, color=mints_colors[1])
 
 l_nmf_euc = scatter!(ax, 1:9, df_nmf_euc[:, :θ], markersize=15, color=mints_colors[2], marker=:diamond)
 lines!(ax, 1:9, df_nmf_euc[:, :θ], linewidth=3, linestyle=:dash, color=mints_colors[2])
@@ -291,21 +291,22 @@ lines!(ax, 1:9, df_nmf_kl[:, :θ], linewidth=3, linestyle=:dash, color=:red)
 l_nmf_L21 = scatter!(ax, 1:9, df_nmf_L21[:, :θ], markersize=15, color=:orange, marker=:star5)
 lines!(ax, 1:9, df_nmf_L21[:, :θ], linewidth=3, linestyle=:dash, color=:orange)
 
-fig[1,1] = Legend(fig, [l_gsm, l_gsm_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM (Linear)", "GSM", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
+fig[1,1] = Legend(fig, [l_gsm_combo, l_gsm_big_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM", "GSM (Big)", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
 
 fig
 
 save(joinpath(figpath, "linear", "spectral-angle-vs-snr.png"), fig)
 
 
+
 fig = Figure(; px_per_unit=30);
 ax = Axis(fig[2,1], xlabel="SNR (dB)", ylabel="Mean RMSE", xticks=(1:9, ["∞", "35", "30", "25", "20", "15", "10", "5", "0"]), xminorgridvisible=false, yminorgridvisible=false);
 
-l_gsm = scatter!(ax, 1:9, df_gsm_plot[:, :RMSE], markersize=15, color=:green)
-lines!(ax, 1:9, df_gsm_plot[:, :RMSE], linewidth=3, linestyle=:dash, color=:green)
+l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :RMSE], markersize=15, color=:green)
+lines!(ax, 1:9, df_gsm_combo_plot[:, :RMSE], linewidth=3, linestyle=:dash, color=:green)
 
-l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :RMSE], markersize=15, color=mints_colors[1], marker=:utriangle)
-lines!(ax, 1:9, df_gsm_combo_plot[:, :RMSE], linewidth=3, linestyle=:dash, color=mints_colors[1])
+l_gsm_big_combo = scatter!(ax, 1:9, df_gsm_big_combo_plot[:, :RMSE], markersize=15, color=mints_colors[1], marker=:utriangle)
+lines!(ax, 1:9, df_gsm_big_combo_plot[:, :RMSE], linewidth=3, linestyle=:dash, color=mints_colors[1])
 
 l_nmf_euc = scatter!(ax, 1:9, df_nmf_euc[:, :RMSE], markersize=15, color=mints_colors[2], marker=:diamond)
 lines!(ax, 1:9, df_nmf_euc[:, :RMSE], linewidth=3, linestyle=:dash, color=mints_colors[2])
@@ -316,7 +317,7 @@ lines!(ax, 1:9, df_nmf_kl[:, :RMSE], linewidth=3, linestyle=:dash, color=:red)
 l_nmf_L21 = scatter!(ax, 1:9, df_nmf_L21[:, :RMSE], markersize=15, color=:orange, marker=:star5)
 lines!(ax, 1:9, df_nmf_L21[:, :RMSE], linewidth=3, linestyle=:dash, color=:orange)
 
-fig[1,1] = Legend(fig, [l_gsm, l_gsm_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM (Linear)", "GSM", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
+fig[1,1] = Legend(fig, [l_gsm_combo, l_gsm_big_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM", "GSM (Big)", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
 fig
 
 save(joinpath(figpath, "linear", "rmse-vs-snr.png"), fig)
@@ -326,11 +327,11 @@ save(joinpath(figpath, "linear", "rmse-vs-snr.png"), fig)
 fig = Figure();
 ax = Axis(fig[2,1], xlabel="SNR (dB)", ylabel="Mean Spectral Information Divergence", xticks=(1:9, ["∞", "35", "30", "25", "20", "15", "10", "5", "0"]), xminorgridvisible=false, yminorgridvisible=false);
 
-l_gsm = scatter!(ax, 1:9, df_gsm_plot[:, :SID], markersize=15, color=:green)
-lines!(ax, 1:9, df_gsm_plot[:, :SID], linewidth=3, linestyle=:dash, color=:green)
+l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :SID], markersize=15, color=:green)
+lines!(ax, 1:9, df_gsm_combo_plot[:, :SID], linewidth=3, linestyle=:dash, color=:green)
 
-l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :SID], markersize=15, color=mints_colors[1], marker=:utriangle)
-lines!(ax, 1:9, df_gsm_combo_plot[:, :SID], linewidth=3, linestyle=:dash, color=mints_colors[1])
+l_gsm_big_combo = scatter!(ax, 1:9, df_gsm_big_combo_plot[:, :SID], markersize=15, color=mints_colors[1], marker=:utriangle)
+lines!(ax, 1:9, df_gsm_big_combo_plot[:, :SID], linewidth=3, linestyle=:dash, color=mints_colors[1])
 
 l_nmf_euc = scatter!(ax, 1:9, df_nmf_euc[:, :SID], markersize=15, color=mints_colors[2], marker=:diamond)
 lines!(ax, 1:9, df_nmf_euc[:, :SID], linewidth=3, linestyle=:dash, color=mints_colors[2])
@@ -341,7 +342,7 @@ lines!(ax, 1:9, df_nmf_kl[:, :SID], linewidth=3, linestyle=:dash, color=:red)
 l_nmf_L21 = scatter!(ax, 1:9, df_nmf_L21[:, :SID], markersize=15, color=:orange, marker=:star5)
 lines!(ax, 1:9, df_nmf_L21[:, :SID], linewidth=3, linestyle=:dash, color=:orange)
 
-fig[1,1] = Legend(fig, [l_gsm, l_gsm_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM (Linear)", "GSM", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
+fig[1,1] = Legend(fig, [l_gsm_combo, l_gsm_big_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM", "GSM (Big)", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
 
 fig
 
@@ -351,11 +352,11 @@ save(joinpath(figpath, "linear", "sid-vs-snr.png"), fig)
 fig = Figure();
 ax = Axis(fig[2,1], xlabel="SNR (dB)", ylabel="Data Reconstruction RMSE", xticks=(1:9, ["∞", "35", "30", "25", "20", "15", "10", "5", "0"]), xminorgridvisible=false, yminorgridvisible=true); #, yscale=log10);
 
-l_gsm = scatter!(ax, 1:9, df_gsm_plot[:, :reconst_rmse], markersize=15, color=:green)
-lines!(ax, 1:9, df_gsm_plot[:, :reconst_rmse], linewidth=3, linestyle=:dash, color=:green)
+l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :reconst_rmse], markersize=15, color=:green)
+lines!(ax, 1:9, df_gsm_combo_plot[:, :reconst_rmse], linewidth=3, linestyle=:dash, color=:green)
 
-l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :reconst_rmse], markersize=15, color=mints_colors[1], marker=:utriangle)
-lines!(ax, 1:9, df_gsm_combo_plot[:, :reconst_rmse], linewidth=3, linestyle=:dash, color=mints_colors[1])
+l_gsm_big_combo = scatter!(ax, 1:9, df_gsm_big_combo_plot[:, :reconst_rmse], markersize=15, color=mints_colors[1], marker=:utriangle)
+lines!(ax, 1:9, df_gsm_big_combo_plot[:, :reconst_rmse], linewidth=3, linestyle=:dash, color=mints_colors[1])
 
 l_nmf_euc = scatter!(ax, 1:9, df_nmf_euc[:, :reconst_rmse], markersize=15, color=mints_colors[2], marker=:diamond)
 lines!(ax, 1:9, df_nmf_euc[:, :reconst_rmse], linewidth=3, linestyle=:dash, color=mints_colors[2])
@@ -366,7 +367,7 @@ lines!(ax, 1:9, df_nmf_kl[:, :reconst_rmse], linewidth=3, linestyle=:dash, color
 l_nmf_L21 = scatter!(ax, 1:9, df_nmf_L21[:, :reconst_rmse], markersize=15, color=:orange, marker=:star5)
 lines!(ax, 1:9, df_nmf_L21[:, :reconst_rmse], linewidth=3, linestyle=:dash, color=:orange)
 
-fig[1,1] = Legend(fig, [l_gsm, l_gsm_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM (Linear)", "GSM", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
+fig[1,1] = Legend(fig, [l_gsm_combo, l_gsm_big_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM", "GSM (Big)", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
 
 fig
 
@@ -377,11 +378,11 @@ save(joinpath(figpath, "linear", "reconstruction-rmse.png"), fig)
 fig = Figure();
 ax = Axis(fig[2,1], xlabel="SNR (dB)", ylabel="Mean Abundance RMSE", xticks=(1:9, ["∞", "35", "30", "25", "20", "15", "10", "5", "0"]), xminorgridvisible=false, yminorgridvisible=false);
 
-l_gsm = scatter!(ax, 1:9, df_gsm_plot[:, :abund_rmse], markersize=15, color=:green)
-lines!(ax, 1:9, df_gsm_plot[:, :abund_rmse], linewidth=3, linestyle=:dash, color=:green)
+l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :abund_rmse], markersize=15, color=:green)
+lines!(ax, 1:9, df_gsm_combo_plot[:, :abund_rmse], linewidth=3, linestyle=:dash, color=:green)
 
-l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :abund_rmse], markersize=15, color=mints_colors[1], marker=:utriangle)
-lines!(ax, 1:9, df_gsm_combo_plot[:, :abund_rmse], linewidth=3, linestyle=:dash, color=mints_colors[1])
+l_gsm_big_combo = scatter!(ax, 1:9, df_gsm_big_combo_plot[:, :abund_rmse], markersize=15, color=mints_colors[1], marker=:utriangle)
+lines!(ax, 1:9, df_gsm_big_combo_plot[:, :abund_rmse], linewidth=3, linestyle=:dash, color=mints_colors[1])
 
 l_nmf_euc = scatter!(ax, 1:9, df_nmf_euc[:, :abund_rmse], markersize=15, color=mints_colors[2], marker=:diamond)
 lines!(ax, 1:9, df_nmf_euc[:, :abund_rmse], linewidth=3, linestyle=:dash, color=mints_colors[2])
@@ -392,11 +393,11 @@ lines!(ax, 1:9, df_nmf_kl[:, :abund_rmse], linewidth=3, linestyle=:dash, color=:
 l_nmf_L21 = scatter!(ax, 1:9, df_nmf_L21[:, :abund_rmse], markersize=15, color=:orange, marker=:star5)
 lines!(ax, 1:9, df_nmf_L21[:, :abund_rmse], linewidth=3, linestyle=:dash, color=:orange)
 
-fig[1,1] = Legend(fig, [l_gsm, l_gsm_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM (Linear)", "GSM", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
+fig[1,1] = Legend(fig, [l_gsm_combo, l_gsm_big_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM", "GSM (Big)", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
 
 fig
 
-save(joinpath(figpath, "linear", "rmse-vs-snr.png"), fig)
+save(joinpath(figpath, "linear", "abundance-rmse-vs-snr.png"), fig)
 
 
 
@@ -420,7 +421,7 @@ vertex_3 = Float64.(res["Vertex_3"])
 fig = Figure();
 ax = Axis(fig[1,1], xlabel="Iteration", ylabel="Log-likelihood", yscale=log10)
 lines!(ax, 2:length(res["llhs"]), Float64.(res["llhs"][2:end]), linewidth=3)
-xlims!(ax, 0, 200)
+xlims!(ax, 0, 100)
 fig
 
 save(joinpath(figpath, "linear", "llh.png"), fig)
@@ -428,7 +429,7 @@ save(joinpath(figpath, "linear", "llh.png"), fig)
 fig = Figure();
 ax = Axis(fig[1,1], xlabel="Iteration", ylabel="Q (a.u.)", yscale=log10)
 lines!(ax, 2:length(res["Q"]), Float64.(res["Q"][2:end]), linewidth=3)
-xlims!(0, 200)
+xlims!(0, 100)
 fig
 
 save(joinpath(figpath, "linear", "Q-fit.png"), fig)
