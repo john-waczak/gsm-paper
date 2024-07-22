@@ -459,4 +459,3 @@ xlims!(ax, λs[1], λs[end])
 fig
 
 save(joinpath(figpath, "linear", "extracted-endmembers.png"), fig)
-
