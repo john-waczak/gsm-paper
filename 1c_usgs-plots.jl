@@ -273,8 +273,9 @@ df_gsm_big_combo_plot[:, [:SNR, :θ, :abund_rmse, :reconst_rmse]]
 
 
 # figure out the lambda with the best θ for each SNR
-fig = Figure(; px_per_unit=30);
-ax = Axis(fig[2,1], xlabel="SNR (dB)", ylabel="Mean Spectral Angle (degrees)", xticks=(1:9, ["∞", "35", "30", "25", "20", "15", "10", "5", "0"]), xminorgridvisible=false, yminorgridvisible=false);
+fig = Figure(;);
+gl = fig[1,1] = GridLayout();
+ax = Axis(gl[2,1], xlabel="SNR (dB)", ylabel="Mean Spectral Angle (degrees)", xticks=(1:9, ["∞", "35", "30", "25", "20", "15", "10", "5", "0"]), xminorgridvisible=false, yminorgridvisible=false);
 
 l_gsm_combo = scatter!(ax, 1:9, df_gsm_combo_plot[:, :θ], markersize=15, color=:green)
 lines!(ax, 1:9, df_gsm_combo_plot[:, :θ], linewidth=3, linestyle=:dash, color=:green)
@@ -291,7 +292,16 @@ lines!(ax, 1:9, df_nmf_kl[:, :θ], linewidth=3, linestyle=:dash, color=:red)
 l_nmf_L21 = scatter!(ax, 1:9, df_nmf_L21[:, :θ], markersize=15, color=:orange, marker=:star5)
 lines!(ax, 1:9, df_nmf_L21[:, :θ], linewidth=3, linestyle=:dash, color=:orange)
 
-fig[1,1] = Legend(fig, [l_gsm_combo, l_gsm_big_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM", "GSM (Big)", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
+Leg = Legend(gl[1,1], [l_gsm_combo, l_gsm_big_combo, l_nmf_euc, l_nmf_kl, l_nmf_L21], ["GSM", "GSM (Big)", "NMF (ℓ₂)", "NMF (KL)", "NMF (ℓ₂,₁)"], framevisible=false, orientation=:horizontal, padding=(0,0,0,0), labelsize=14, height=-5)
+
+xlims!(ax, 0, 9.2)
+fig
+# ax2 = Axis(gl[2,2])
+# hidedecorations!(ax2)
+# hidespines!(ax2)
+# linkyaxes!(ax, ax2)
+
+# colsize!(gl, 2, Relative(0.1))
 
 fig
 
