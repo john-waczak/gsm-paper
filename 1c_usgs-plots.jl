@@ -456,7 +456,7 @@ l3_fit = lines!(ax, λs, vertex_2, color=(mints_colors[3], 0.75), linewidth=2) #
 
 fig[1,2] = Legend(fig, [l1, l2, l3, l1_fit, l2_fit, l3_fit], [min_to_use..., "Vertex 1", "Vertex 2", "Vertex 3"], framevisible=false, orientation=:vertical, padding=(0,0,0,0), labelsize=13, height=-5)
 xlims!(ax, λs[1], λs[end])
-
+ylims!(ax, 0, 1)
 fig
 
 save(joinpath(figpath, "linear", "extracted-endmembers.png"), fig)
