@@ -153,13 +153,16 @@ unique(df_res.λw)
 sort(df_res[df_res.λw .== 10.0 , [:Nv, :λe, :λw, :BIC, :AIC, :Q]], :BIC)
 
 
-df_best = df_res[df_res.λw .≥ 1.0 , :];
+df_best = sort(df_res[df_res.λw .≥ 1.0 , :], :BIC);
+
+df_out = df_best[1:10, [:Nv, :λe, :λw, :BIC, :AIC, :rmse_reconst,]]
+CSV.write("./paper/fit-res.csv", df_out)
 # df_best = df_res
 # Identify the best Nv via BIC, AIC, Q, LLH
 
 df_best[argmax(df_best.Q), [:Q, :Nv, :λe, :λw]]
+
 df_best[argmax(df_best.llhs),  [:llhs, :Nv, :λe, :λw]]
-df_best[argmin(df_best.BIC), [:BIC, :Nv, :λe, :λw]]
 df_best[argmin(df_best.AIC), [:AIC, :Nv, :λe, :λw]]
 
 
