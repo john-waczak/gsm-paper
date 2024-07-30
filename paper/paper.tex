@@ -253,7 +253,49 @@ Exploratory data analysis:
 \caption{Explained variance of PCA components for robot team dataset. A red horizontal line is superimposed on the plot indicating an explained variance of $1\%$. \label{fig:robot-team-pca}}
 \end{figure}  
 
+\begin{table}[H] 
+\caption{This is a table caption. Tables should be placed in the main text near to the first time they are~cited.\label{table:fit-comparison}}
+\begin{tabularx}{\textwidth}{CCC}
+\toprule
+\textbf{Title 1}	& \textbf{Title 2}	& \textbf{Title 3}\\
+\midrule
+Entry 1		& Data			& Data\\
+Entry 2		& Data			& Data \textsuperscript{1}\\
+\bottomrule
+\end{tabularx}
+\noindent{\footnotesize{\textsuperscript{1} Tables may have a footer.}}
+\end{table}
 
+
+\begin{figure}[H]
+\begin{adjustwidth}{-\extralength}{0cm}
+\centering
+\includegraphics[width=1.25\columnwidth]{paper/figures/results/robot-team/extracted-endmembers.pdf}
+\end{adjustwidth}
+\caption{Nonlinear GSM applied to water spectra: \textbf{(a)} Spectra corresponding to maximum abundances for each vertex in the trained GSM identified for as water, near-shore vegetation, and rhodamine dye sources. \textbf{(b)} The original hyperspectral datacube segmented according to the relative abundance of each endmember. Each water pixel defined by an NDWI $\geq 0.25$ is colored by smoothing interpolating between red, green, and blue colors corresponding to the relative abundance estimated for rhodamine, vegetation, and water spectra.}
+\label{fig:robot-team-endmembers}
+\end{figure}  
+
+\newpage
+\begin{figure}[H]
+\begin{adjustwidth}{-\extralength}{0cm}
+\centering
+\includegraphics[width=\columnwidth]{paper/figures/results/robot-team/endmember-abundances.pdf}
+\caption{Endmember distributions: \textbf{(a)} The distribution of abundance for the water class. This source dominates in the center of the water and decreases towards the edge of the pond where surface vegetation begins to dominate the reflectance signal. We note that the water abundance decreases near  the edge of the rhodamine plume reflecting dye mixing and diffusion. \textbf{(b)} The distribution of vegetation. This signal includes filamentous blue-green algae observed to accumulate in shallow waters near the shore. \textbf{(c)} The rhodamine dye plume extent segmented from the HSI. The total area for near-shore vegetation and rhodamine are estimated to be $378.6$ $\text{m}^2$ and $255.7$ $\text{m}^2$ respectively.}
+\end{adjustwidth}
+\label{fig:endmember-abundance-dist}
+\end{figure}  
+\newpage
+
+
+\begin{figure}[H]
+\begin{adjustwidth}{-\extralength}{0cm}
+\centering
+\includegraphics[width=1.25\columnwidth]{paper/figures/results/robot-team/plume-evo.pdf}
+\end{adjustwidth}
+\caption{Rhodamine plume evolution: Using the trained GSM we can track the dispersion of the rhodamine dye plume between successive drone flights. \textbf{(a)} The initial plume distribution after release. Here the dye subsumes an area of $255.7$ $\text{m}^2$. \textbf{(b)} The same plume imaged 15 minutes later now extends across an area of $571.8$ $\text{m}^2$}
+\label{fig:plume-evo}
+\end{figure}  
 
 
 \section{Discussion}
