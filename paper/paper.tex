@@ -119,13 +119,69 @@ Hanson Center for Space Sciences, University of Texas at Dallas, Richardson, TX 
 
 1. Overview of problem
 
+Hyperspectral imaging has emerged as a keystone technology in remote sensing where the ability to discern slight variations in high resolution spectra facilitates a plethora of critical applications from land use assessment... etc. 
+- environmental monitoring, resource management, risk assessment, biodiversity conservation, sustainable agriculture,
+- Many hyperspectral remote sensing missions have already been launched with many more in development
+    - EnMAP (launched 2022) is german satellite with remote sensing imager
+    - PRISMA (launched 2019) is italian remote sensing satellite
+    - HISUI (launched 2019) is japanese HSI on international space station
+    - CHIME (future launch) - Copernicus Hyperspectral Imaging mission for the environment from the european space agency
+    - SBG (future launch) - surface biology and geology - NASA mission
+    - SHALOM (future launch) - Joint israeli-italian mission
+    - HyspIRI (future launch) - italian missions
+- Additionally, continued improvement to HSI technologies have dramatically reduced their size enabling their inclusion to the payloads of small unmanned aerial vehicles (UAV). 
+
+- Key challenge: how to make sense of big data
+- Common approaches involve computation of spectral indices like the NDVI
+    - These are nice but can be challenging to compare between instruments due to varibility in spectral bands and sensor response
+    - They also throw away
+- A second common approach is to directly map spectral data to parameters of interest using in situ reference data 
+    - This is popular for water quality assessment where parameters like CDOM, etc. track water quality
+    - The key limitation is the availability of coincident reference data. This can requires decades of aligned observations to provide sufficient data volumes for statistical/machine learning models
+- In light of these difficulties, unsupervised methods which extract relevant information from HSI themselves can be advantageous
+- Reality: pixels captured by remote sensing platforms have spatial extents which typically cover multiple unique sources. 
+- overview of spectral unmixing
+- relevance to source identification in remote sensing, contaminant identication 
+- relevance to source apportionment in air quality monitoring
+
 2. Traditional approaches for endmember extraction and spectral unmixing
+- Standard assumption: linear mixing model (LMM)
+- Standard requirements for LMM and other mixing models
+    - abundance sum-to-one contraint $\sum_i a_i = 1$
+    - endmember non-negativity constraint
+- Secondary assumption: existence of pure pixels, e.g. VCA and other algorithms
+- PMF and NMF as unsupervised LMM models 
+- Relevance of nonlinear mixing, e.g. multiple scattering, interference effects, etc...
+- Approaches for nonlinear unmixing
+    - radiative transfer models
+    - Deep learning approaches
 
 3. Generative topographic mapping
+- Self organizing map is a data-driven unsupervised classification algorithm
+- GTM is a principled extension of the SOM to a fully probabalistic latent-space model
+- Uses of the GTM in cheminformatics
+- Our previous work using the GTM
+- Limitations of the GTM
+    - 2 dimensional latent space
+    - Abundance estimation requires other heuristics like NS3
+    - No direct guarantee of endmember non-negativity. In practice, this is not usually a problem when data are non-negative but it would be nice to have some guarantee
+- Flexibility of the GTM model suggest augmenting the latent space distribution may lead to a more interpretable model
 
 4. Proposed method: generative simplex mapping
+- We propose a novel model dubbed Generative Simplex Mapping which naturally extends the GTM to directly facilitate mixture models. 
+- The latent space is modified to an N-simplex where each vertex naturally corresponds to a unique source
+- positions within the simplex correspond to different mixing ratios
+- The latent space is then mapped to the data space using an activation function which allows for flexible models including both linear and nonlinear unmixing. 
+- Like the NMF, the GSM simultaneously extracts endmembers \textit{and} estimates abundances
+- Importantly, the GSM learns a probability distribution for the data allowing spectral 
 
 5. Summary of paper structure
+- In this paper, we present the GSM and demonstrate its application to both synthetic and real datasets. The structure of the paper is as follows: 
+- In section 2 we provide a detailed overview of the GSM model and it's implementation
+- In section 3 we describe experiments using synthetic and real data to evaluate the performance of the GSM
+- In section 4 we present the experimental results
+- In sections 5 we discuss additional applications of the GSM and further extensions to be explored in future work. 
+- Finally, in section 6, we present a summary of our conclusions.
 
 \newpage
 
@@ -179,6 +235,10 @@ Penalized complete-data log likelihood
 
 \begin{equation}\label{eq:beta-update}
     \frac{1}{\beta^{\text{new}}}  = \frac{1}{ND}\sum\limits_n^N\sum\limits_k^K \mathbf{R}_{kn}\lVert \psi(z_k; \mathbf{W}) - x_n \rVert^2
+\end{equation}
+
+\begin{equation}\label{eq:W-update}
+    W_{dm}^\text{new} = \dfrac{\left(X^TR^T\Phi\right)_{dm}}{\left(W\Phi^TG\Phi + \Lambda\right)_{dm}} 
 \end{equation}
 
 - multiplicative updated to guarantee non-negativity (Generalized EM procedure)
@@ -254,16 +314,24 @@ Exploratory data analysis:
 \end{figure}  
 
 \begin{table}[H] 
-\caption{This is a table caption. Tables should be placed in the main text near to the first time they are~cited.\label{table:fit-comparison}}
-\begin{tabularx}{\textwidth}{CCC}
+\caption{Hyperparameter optimization: Multiple models were trained to identify optimal hyperparameter values for the GSM applied to the water spectra dataset. Here we report the top $10$ models ranked according the the BIC.}
+\label{table:fit-comparison}
+\begin{tabularx}{\textwidth}{CCCCCC}
 \toprule
-\textbf{Title 1}	& \textbf{Title 2}	& \textbf{Title 3}\\
+\textbf{$N_v$}	& \textbf{$\lambda_e$}	& \textbf{$\lambda_w$} & \textbf{BIC} & \textbf{AIC} & \textbf{Reconstruction RMSE}\\
 \midrule
-Entry 1		& Data			& Data\\
-Entry 2		& Data			& Data \textsuperscript{1}\\
+$3$ & $0.01$    & $1.0$     & $-6.195\times10^7$   & $-6.269\times10^7$   & $0.000989$ \\
+$3$	& $0.001$   & $1.0$     & $-6.194\times10^7$   & $-6.268\times10^7$   & $0.000989$ \\
+$3$	& $0.1$     & $1.0$	    & $-6.192\times10^7$   & $-6.265\times10^7$   & $0.000991$ \\
+$3$	& $1.0$     & $1.0$	    & $-6.186\times10^7$   & $-6.260\times10^7$   & $0.001190$ \\
+$4$	& $1.0$     & $1.0$	    & $-6.181\times10^7$   & $-6.255\times10^7$   & $0.001002$ \\
+$4$	& $0.1$     & $1.0$	    & $-6.175\times10^7$   & $-6.249\times10^7$   & $0.001008$ \\
+$4$	& $0.01$    & $1.0$     & $-6.173\times10^7$   & $-6.247\times10^7$   & $0.001009$ \\ 
+$4$	& $0.001$   & $1.0$     & $-6.173\times10^7$   & $-6.247\times10^7$   & $0.001009$ \\
+$4$	& $0.1$     & $10.0$    & $-6.171\times10^7$   & $-6.245\times10^7$   & $0.001011$ \\
+$3$	& $1.0$     & $10.0$    & $-6.166\times10^7$   & $-6.239\times10^7$   & $0.001014$ \\
 \bottomrule
 \end{tabularx}
-\noindent{\footnotesize{\textsuperscript{1} Tables may have a footer.}}
 \end{table}
 
 
@@ -327,7 +395,7 @@ Entry 2		& Data			& Data \textsuperscript{1}\\
 
 - Discuss other applications of the GSM
     - Optimal route planning for in-situ data collection based on prize-collecting travelling salesman problem, i.e. construct a route which maximizies area traversed in GSM latent space (e.g. the n-simplex). 
-    - Applications to source apportionment, e.g. linear GSM can be used for standard source apportionment problems (no reactions) and nonlinear GSM may be useful for modeling scenarios with aditional complications due to reactions and transfport from source to receptor.
+    - Applications to source apportionment, e.g. linear GSM can be used for standard source apportionment problems (no reactions) and nonlinear GSM may be useful for modeling scenarios with additional complications due to reactions and during transport from source to receptor.
 
 \section{Conclusions}
 
