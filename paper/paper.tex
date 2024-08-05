@@ -150,7 +150,7 @@ Assuming data are uniformly sampled from an embedded manifold in the data-space,
     p(z) = \sum\limits_k^K \pi_k \, \delta(z - z_k) \quad\text{where}\quad  \sum_k^K\pi_k = 1.
 \end{equation}
 
-For a dataset containing $N$-many records, these definitions yield a log-likelihood function given by
+For a dataset containing $N$-many records, these definitions yield a log likelihood function given by
 \begin{equation}\label{eqn:llh}
     \mathcal{L}(\mathbf{W}, \beta) = \sum\limits_n^N \ln \left( \sum\limits_k^K \pi_k \, p(x_n \mid z_k, \mathbf{W}, \beta) \right)
 \end{equation}
@@ -159,12 +159,12 @@ which can be maximized to obtain optimal values for model weights $\mathbf{W}$ a
 In the standard LMM model, the mapping $\Psi$ is given by $\psi(z;W) = \mathbf{W}z$ where the columns of $\mathbf{W}$ correspond to endmember spectra. To model nonlinear mixing, $z$ is replaced by the output of $M$-many activation functions such that $\Psi(z;W) = \mathbf{W}\phi(z)$. The activations applied to each GSM node can then be collected to form a matrix 
  $\mathbf{\Phi}_{km} = \phi_m(z_k)$. For $m \leq N_v$, we take $\Phi_{km} = z_k$ to account for linear mixing. The remaining  $M-N_v$ activations are computed using radial basis functions (RBF) with centers $\mu_m$ distributed throughout the simplex (but not at the vertices) so that 
 \begin{equation}\label{eq:act-function}
-    \mathbf{\Phi}_{km} = \begin{cases}
+    \Phi_{km} = \begin{cases}
         \dfrac{s - \lVert z_k - \mu_m \rVert}{s}; & \lVert z_k - \mu_m \rVert \leq s \\
         0; & \lVert z_k - \mu_m \rVert > s
     \end{cases}
 \end{equation}
-where $s$ is the spacing between RBF centers. In this form, the first $N_v$ columns of $\mathbf{W}$ correspond to endmember spectra while the remaining columns account for additional nonlinear effects. In the limit of linear mixing, the GSM training algorithm should therefore force $W_{dm} = 0$ for $m\geq N_v$. A visualization of the GSM model is shown in Fig~\ref{fig:gsm-diagram}.
+where $s$ is the spacing between RBF centers. In this form, the first $N_v$ columns of $\mathbf{W}$ correspond to endmember spectra while the remaining columns account for additional nonlinear effects. For linear mixing, the GSM training algorithm should therefore drive $W_{dm}$ to $0$ for $m\geq N_v$. A visualization of the GSM model is shown in Fig~\ref{fig:gsm-diagram}.
 
 \begin{figure}[H]
 \includegraphics[width=\columnwidth]{methods/gsm/gsm-diagram.pdf}
@@ -172,42 +172,57 @@ where $s$ is the spacing between RBF centers. In this form, the first $N_v$ colu
 \label{fig:gsm-diagram}
 \end{figure}  
 
-To further constrain the model, we introduce prior distributions on the weights $\mathbf{W}$. For $m\leq N_v$ we take $W_{dm}\sim\mathcal{N}(0, \lambda_e^{-1})$ corresponding to a zero-mean Gaussian with variance $\lambda_e^{-1}$. For $m>N_v$ we use a zero-mean Laplace distribution, $W_{dm}\sim\dfrac{\lambda_w}{2}\exp(-\lambda_w\lvert W_{dm}\rvert)$, with scale parameter $\lambda_w^{-1}$. Under these choices, $\lambda_e$ corresponds to $L_2$ regularization on endmember spectra while $\lambda_w$ corresponds to $L_1$ regularization on the nonlinear activations. In other words, $\lambda_e$ governs the smoothness of the resulting endmembers while $\lambda_w$ encourages sparsity for the nonlinear contributions.
+To further constrain the model, we introduce prior distributions on the weights $\mathbf{W}$. For $m\leq N_v$ we take $W_{dm}\sim\mathcal{N}(0, \lambda_e^{-1})$ corresponding to a zero-mean Gaussian with variance $\lambda_e^{-1}$. For $m>N_v$ we use a zero-mean Laplace distribution, $W_{dm}\sim\dfrac{\lambda_w}{2}\exp(-\lambda_w\lvert W_{dm}\rvert)$, with scale parameter $\lambda_w^{-1}$. Under these choices $\lambda_e$ corresponds to $L_2$ regularization on endmember spectra while $\lambda_w$ corresponds to $L_1$ regularization on the nonlinear activations. In other words, $\lambda_e$ governs the smoothness of the resulting endmembers while $\lambda_w$ encourages sparsity for the nonlinear contributions.
 
 An EM algorithm for the GSM model can now be formulated as follows. Suppose that we have current estimates for the model weights $\mathbf{W}$, mixing coefficients $\pi_k$, and precision parameter $\beta$. During the expectation step we compute the posterior probabilities, that is, the responsibility of each GSM node for each spectrum in the dataset:
 \begin{equation}\label{eq:responsibility}
-    \mathbf{R}_{kn}  = p(z_k \mid x_n, \mathbf{W}, \beta) = \dfrac{\pi_k \, p(x_n \mid z_k, \mathbf{W}, \beta)}{\sum\limits_{k'}^K \pi_{k'} \, p(x_n \mid z_{k'}, \mathbf{W}, \beta)}.
+    R_{kn}  = p(z_k \mid x_n, \mathbf{W}, \beta) = \dfrac{\pi_k \, p(x_n \mid z_k, \mathbf{W}, \beta)}{\sum\limits_{k'}^K \pi_{k'} \, p(x_n \mid z_{k'}, \mathbf{W}, \beta)}.
 \end{equation}
-
-Then, holding the $\mathbf{R}_{kn}$ fixed, we optimize the expectation of the penalized complete-data log-likelihood given by
-%\begin{adjustwidth}{-\extralength}{0cm}
+For the maximization step, we consider the expectation of the penalized complete-data log likelihood given by
 \begin{equation}\label{eq:complete-data-llh}
 \begin{aligned}
-    Q &= \sum\limits_n^N\sum\limits_k^K \mathbf{R}_{kn} \left(\ln\pi_k + \frac{D}{2}\ln\left(\frac{\beta}{2\pi}\right) - \frac{\beta}{2}\sum\limits_d^D\left(\sum\limits_m^M \mathbf{W}_{dm}\mathbf{\Phi}_{km} - \mathbf{X}_{nd}\right)^2\right) \\ 
-    &\qquad + \frac{MD}{2}\ln\left(\frac{\lambda}{2\pi}\right) - \frac{\lambda}{2}\sum\limits_d^D \sum\limits_m^M \mathbf{W}_{dm}^2
+    Q &= \sum_n^N\sum_k^K R_{kn} \left(\ln\pi_k + \frac{D}{2}\ln\left(\frac{\beta}{2\pi}\right) - \frac{\beta}{2}\sum_d^D\left(\sum_m^M W_{dm}\Phi_{km} - X_{nd}\right)^2\right) \\ 
+    &\qquad + \frac{N_vD}{2}\ln\left(\frac{\lambda_e}{2\pi}\right) - \frac{\lambda}{2}\sum_d^D \sum_{m=1}^{N_v} W_{dm}^2  \\ 
+    &\qquad + (M-N_v)D\ln\left(\dfrac{\lambda_w}{2}\right) - \lambda_w\sum_d^D\sum_{m=N_v+1}^{M} W_{dm}
 \end{aligned}
 \end{equation}
-%\end{adjustwidth}
+where $X_{nd}$ is the $d$-th component of the $n$-th spectrum in the dataset. Eq~\ref{eq:complete-data-llh} is then maximized with respect to $\pi_k$, $\beta$, and $\mathbf{W}$ to obtain new parameter values. A detailed overview of the EM procedure can be found in Bishop \cite{bishop-prml}.
 
-
-
-
+For $\pi_k$, optimization can be performed using Lagrange multipliers to maintain the condition that $\sum_k\pi_k=1$. Doing so yields
 \begin{equation}\label{eq:pi-update}
-    \pi_k^{\text{new}}  = \frac{1}{N}\sum_n \mathbf{R}_{kn}
+    \pi_k^{\text{new}}  = \frac{1}{N}\sum_n R_{kn}
 \end{equation}
 
-\begin{equation}\label{eq:beta-update}
-    \frac{1}{\beta^{\text{new}}}  = \frac{1}{ND}\sum\limits_n^N\sum\limits_k^K \mathbf{R}_{kn}\lVert \psi(z_k; \mathbf{W}) - x_n \rVert^2
+Optimization of Eq~\ref{eq:complete-data-llh} with respect to $\mathbf{W}$ leads to a linear system which can be solved using standard numerical methods. However, in this form we can not guarantee the non-negativity of $\mathbf{W}$. We therefore take inspiration from the multiplicative updates for NMF introduced by Lee and Seung \cite{nmf-orig}. A gradient-based update for $\mathbf{W}$ would take the form
+\begin{equation}
+    \mathbf{W}_{\text{new}} = \mathbf{W} + \eta\frac{\partial Q}{\partial \mathbf{W}}
 \end{equation}
-
+for some learning rate $\eta$. Differentiating, we obtain
+\begin{equation}
+    \frac{\partial Q}{\partial \mathbf{W}} = -\beta \mathbf{W}\mathbf{\Phi}^T\mathbf{G}\mathbf{\Phi} - \mathbf{\Lambda} + \beta \mathbf{X}^T\mathbf{R}^T\mathbf{\Phi}
+\end{equation}
+where $\mathbf{G}$ is a diagonal matrix with $G_{kk} = \sum_n R_{kn}$ and $\mathbf{\Lambda}$ is given by 
+\begin{equation}
+    \Lambda_{dm} = \begin{cases}
+        \lambda_e W_{dm}; & m \leq N_v \\ 
+        \lambda_w; & m > N_v
+    \end{cases}
+\end{equation}
+If we allow for individual learning rates $\eta_{dm}$ for each element of $\mathbf{W}$, then choosing 
+\begin{equation}
+    \eta_{dm} = \frac{W_{dm}}{\left(\beta \mathbf{W}\mathbf{\Phi}^T\mathbf{G}\mathbf{\Phi}\right)_{dm} + \Lambda_{dm}}
+\end{equation}
+results in update equations for elements of $\mathbf{W}$ given by
 \begin{equation}\label{eq:W-update}
-    W_{dm}^\text{new} = \dfrac{\left(X^TR^T\Phi\right)_{dm}}{\left(W\Phi^TG\Phi + \Lambda\right)_{dm}} 
+    W_{dm}^{new}  = W_{dm} \cdot \dfrac{\left(\beta \mathbf{X}^T\mathbf{R}^T\mathbf{\Phi}\right)_{dm}}{\left(\beta \mathbf{W}\mathbf{\Phi}^T\mathbf{G}\mathbf{\Phi}\right)_{dm} + \Lambda_{dm}}
 \end{equation}
+From Eq~\ref{eq:W-update}, it is clear that we are multiplying $W_{dm}$ by non-negative values and therefore, $W_{dm}$ remains non-negative.
 
-- multiplicative updated to guarantee non-negativity (Generalized EM procedure)
-- sum-to-one constraint is guaranteed via representation of latent space with barycentric coordinates.
-
-
+Finally, optimizing Eq~\ref{eq:complete-data-llh} with respect to $\beta$ yields
+\begin{equation}\label{eq:beta-update}
+    \frac{1}{\beta^{\text{new}}}  = \frac{1}{ND}\sum\limits_n^N\sum\limits_k^K R_{kn}\lVert \psi(z_k; \mathbf{W}) - x_n \rVert^2.
+\end{equation}
+The expectation and maximization steps are repeated in turn until $Q$ converges to a predetermined tolerance level.
 
 \subsection{Implementation Details}
 
