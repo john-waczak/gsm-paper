@@ -257,6 +257,14 @@
   publisher={Nature Publishing Group UK London}
 }
 
+@article{nmf-algorithms,
+  title={Algorithms for non-negative matrix factorization},
+  author={Lee, Daniel and Seung, H Sebastian},
+  journal={Advances in neural information processing systems},
+  volume={13},
+  year={2000}
+}
+
 @inproceedings{nmf-l21,
   title={Robust nonnegative matrix factorization using l21-norm},
   author={Kong, Deguang and Ding, Chris and Huang, Heng},
@@ -265,6 +273,55 @@
   year={2011}
 }
 
+
+% Nonlinear Mixing Effects
+@article{hsi-water-fluorescence,
+  title={Fluorescence component in the reflectance spectra from coastal waters. Dependence on water composition},
+  author={Gilerson, A and Zhou, J and Hlaing, S and Ioannou, I and Schalles, J and Gross, B and Moshary, F and Ahmed, S},
+  journal={Optics Express},
+  volume={15},
+  number={24},
+  pages={15702--15721},
+  year={2007},
+  publisher={Optica Publishing Group}
+}
+
+
+% Nonlinear mixing effects in Water-HSI
+@article{hsi-fluorescence,
+  title={Fluorescence component in the reflectance spectra from coastal waters. Dependence on water composition},
+  author={Gilerson, A and Zhou, J and Hlaing, S and Ioannou, I and Schalles, J and Gross, B and Moshary, F and Ahmed, S},
+  journal={Optics Express},
+  volume={15},
+  number={24},
+  pages={15702--15721},
+  year={2007},
+  publisher={Optica Publishing Group},
+  DOI={10.1364/OE.15.015702}
+}
+
+@article{hsi-absorption,
+  title={CDOM absorption properties of natural water bodies along extreme environmental gradients},
+  author={Nima, Ciren and Frette, {\O}yvind and Hamre, B{\o}rge and Stamnes, Jakob J and Chen, Yi-Chun and S{\o}rensen, Kai and Norli, Marit and Lu, Daren and Xing, Qianguo and Muyimbwa, Dennis and others},
+  journal={Water},
+  volume={11},
+  number={10},
+  pages={1988},
+  year={2019},
+  publisher={MDPI}
+}
+
+@article{hsi-turibidity,
+  title={Influence of dissolved organic materials on turbid water optical properties and remote-sensing reflectance},
+  author={Witte, WG and Whitlock, CH and Harriss, RC and Usry, JW and Poole, LR and Houghton, WM and Morris, WD and Gurganus, EA},
+  journal={Journal of Geophysical Research: Oceans},
+  volume={87},
+  number={C1},
+  pages={441--446},
+  year={1982},
+  publisher={Wiley Online Library},
+  DOI={10.1029/JC087iC01p00441}
+}
 
 % HSI Unmixing
 
@@ -289,6 +346,22 @@
   publisher={IEEE}
 }
 
+@inproceedings{ppi-orig,
+  title={Mapping target signatures via partial unmixing of AVIRIS data},
+  author={Boardman, Joseph W and Kruse, Fred A and Green, Robert O},
+  booktitle={Summaries of the fifth annual JPL airborne earth science workshop. Volume 1: AVIRIS workshop},
+  year={1995}
+}
+
+@inproceedings{N-FINDR-orig,
+  title={N-FINDR: An algorithm for fast autonomous spectral end-member determination in hyperspectral data},
+  author={Winter, Michael E},
+  booktitle={Imaging spectrometry V},
+  volume={3753},
+  pages={266--275},
+  year={1999},
+  organization={SPIE}
+}
 
 @article{spectral-unmixing-orig,
   author={Keshava, N. and Mustard, J.F.},
@@ -310,6 +383,17 @@
         - Argument for LMM: at the resolution of georectified images, we can think of pixels as being linear 
           combinations of constituents. Any nonlinear mixtures will have mixing scales with fundamental lengths less thatn the pixel scale.
   }
+}
+
+@inproceedings{fcls-unmixing,
+  title={Fully constrained least-squares based linear unmixing [hyperspectral image classification]},
+  author={Heinz, Daniel and Chang, C-I and Althouse, Mark LG},
+  booktitle={IEEE 1999 International Geoscience and Remote Sensing Symposium. IGARSS'99 (Cat. No. 99CH36293)},
+  volume={2},
+  pages={1401--1403},
+  year={1999},
+  organization={IEEE},
+  DOI={10.1109/IGARSS.1999.774644}
 }
 
 @inproceedings{cantero2004analysis,
@@ -444,7 +528,7 @@
   }
 }
 
-@article{Feng2022HyperspectralUB,
+@article{unmixing-nmf-review-2,
   title={Hyperspectral Unmixing Based on Nonnegative Matrix Factorization: A Comprehensive Review},
   author={Xin-Ru Feng and Hengchao Li and Rui Wang and Qian Du and Xiuping Jia and Antonio J. Plaza},
   journal={IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing},
@@ -854,6 +938,30 @@
   }
 }
 
+@article{thenkabail-indices,
+  title={Hyperspectral vegetation indices and their relationships with agricultural crop characteristics},
+  author={Thenkabail, Prasad S and Smith, Ronald B and De Pauw, Eddy},
+  journal={Remote sensing of Environment},
+  volume={71},
+  number={2},
+  pages={158--182},
+  year={2000},
+  publisher={Elsevier},
+  DOI={10.1016/S0034-4257(99)00067-X}
+}
+
+@article{ndvi-variability,
+  title={Multi-sensor NDVI data continuity: Uncertainties and implications for vegetation monitoring applications},
+  author={Van Leeuwen, Willem JD and Orr, Barron J and Marsh, Stuart E and Herrmann, Stefanie M},
+  journal={Remote sensing of environment},
+  volume={100},
+  number={1},
+  pages={67--81},
+  year={2006},
+  publisher={Elsevier},
+  DOI={10.1016/j.rse.2005.10.002}
+}
+
 @inproceedings{yousefi2016mineral,
   title={Mineral identification in hyperspectral imaging using Sparse-PCA},
   author={Yousefi, Bardia and Sojasi, Saeed and Castanedo, Clemente Ibarra and Beaudoin, Georges and Huot, Fran{\c{c}}ois and Maldague, Xavier PV and Chamberland, Martin and Lalonde, Erik},
@@ -1008,4 +1116,60 @@
   pages={1562--1576},
   year={2020},
   publisher={IEEE}
+}
+
+
+
+% --- USGS Spectral Library --------------
+
+@techreport{usgs-spectra,
+  title={USGS spectral library version 7},
+  author={Kokaly, Raymond F and Clark, Roger N and Swayze, Gregg A and Livo, K Eric and Hoefen, Todd M and Pearson, Neil C and Wise, Richard A and Benzel, William and Lowers, Heather A and Driscoll, Rhonda L and others},
+  year={2017},
+  institution={US Geological Survey},
+  DOI = {10.3133/ds1035}
+}
+
+
+% --- HSI Satellites -----------------
+@inproceedings{PRISMA-orig,
+  title={PRISMA: The Italian hyperspectral mission},
+  author={Loizzo, Rosa and Guarini, Rocchina and Longo, Francesco and Scopa, Tiziana and Formaro, Roberto and Facchinetti, Claudia and Varacalli, Giancarlo},
+  booktitle={IGARSS 2018-2018 IEEE international geoscience and remote sensing symposium},
+  pages={175--178},
+  year={2018},
+  organization={IEEE},
+  DOI={10.1109/IGARSS.2018.8518512}
+}
+
+@article{EnMAP-orig,
+  title={The EnMAP imaging spectroscopy mission towards operations},
+  author={Storch, Tobias and Honold, Hans-Peter and Chabrillat, Sabine and Habermeyer, Martin and Tucker, Paul and Brell, Maximilian and Ohndorf, Andreas and Wirth, Katrin and Betz, Matthias and Kuchler, Michael and others},
+  journal={Remote Sensing of Environment},
+  volume={294},
+  pages={113632},
+  year={2023},
+  publisher={Elsevier},
+  DOI={10.1016/j.rse.2023.113632}
+}
+
+@inproceedings{PACE-orig,
+  title={The NASA Plankton, Aerosol, Cloud, ocean Ecosystem (PACE) mission: an emerging era of global, hyperspectral Earth system remote sensing},
+  author={Gorman, Eric T and Kubalak, David A and Patel, Deepak and Mott, David B and Meister, Gerhard and Werdell, P Jeremy and others},
+  booktitle={Sensors, systems, and next-generation satellites XXIII},
+  volume={11151},
+  pages={78--84},
+  year={2019},
+  organization={SPIE}
+}
+
+
+@inproceedings{CHIME-orig,
+  title={Copernicus hyperspectral imaging mission for the environment (chime)},
+  author={Rast, Michael and Nieke, Jens and Adams, Jennifer and Isola, Claudia and Gascon, Ferran},
+  booktitle={2021 IEEE international geoscience and remote sensing symposium IGARSS},
+  pages={108--111},
+  year={2021},
+  organization={IEEE},
+  DOI={10.1109/IGARSS47720.2021.9553319}
 }
