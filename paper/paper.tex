@@ -129,9 +129,9 @@ The spatial resolution of hyperspectral imagers generally results in  pixels wit
 
 In realistic scenes multiple scattering and surface variability can easily challenge the assumption of linear mixing \cite{heylen2014review}. Water-based HSI specifically are prone to nonlinear mixing effects due to absorption features of dissolved and suspended substances, fluorescence of organic matter, and particulate scattering in turbid waters \cite{hsi-absorption, hsi-fluorescence, hsi-turibidity}. With the growing popularity of deep learning approaches in remote sensing, a variety of models based on autoencoder architectures have been introduced which enable nonlinear unmixing of HSI data \cite{non-negative-autoencoders,su2019daen,palsson2020convolutional,}. However, the complexity introduced by these models significantly impacts training time and decreases model interpretability. An ideal approach should enable both endmember extraction and nonlinear unmixing while accounting for spectral variability. 
 
-The self-organizing map (SOM) is an unsupervised machine learning method which maps high-dimensional data onto a low-dimensional grid while preserving the topological relationships between data points \cite{kohonen-som-1}. This low dimensional representation provides a convenient way to visualize HSI data while the weight vectors for each SOM node can be interpreted as representative spectra \cite{cantero2004analysis, duran2007time,som-hsi}. If labelled reference spectra are available, the SOM can be used to enable semi-supervised labelling of HSI pixels \cite{riese2019supervised}. The SOM has also been shown to be effective for compression of HSIs acquired by a CubeSat \cite{som-satellite}. Despite these capabilities, the SOM does not offer a probabilistic interpretation and relies on a heuristic training procedure with hyperparameters that can be challenging to tune. To address these shortcomings, Bishop et al introduced the Generative Topographic Mapping (GTM), a probabilistic latent-variable model inspired by the SOM \cite{gtm-orig}. When the latent space is chosen to be two dimensional, the GTM can be used to visualize the distribution of HSI spectra while the mapping of latent-space nodes into the HSI data-space provides endmembers\cite{robot-team-gtm}. Unfortunately, the rectangular latent-space grid employed by the GTM does not directly translate into endmember abundances. Additionally, the expectation-maximization (EM) algorithm used to train the GTM does not guarantee non-negativity of GTM node spectra. 
+The self-organizing map (SOM) is an unsupervised machine learning method which maps high-dimensional data onto a low-dimensional grid while preserving the topological relationships between data points \cite{kohonen-som-1}. This low dimensional representation provides a convenient way to visualize HSI data while the weight vectors for each SOM node can be interpreted as representative spectra \cite{cantero2004analysis, duran2007time,som-hsi}. If labelled reference spectra are available, the SOM can be used to enable semi-supervised labelling of HSI pixels \cite{riese2019supervised}. The SOM has also been shown to be effective for compression of HSIs acquired by a CubeSat \cite{som-satellite}. Despite these capabilities, the SOM does not offer a probabilistic interpretation and relies on a heuristic training procedure with hyperparameters that can be challenging to tune. To address these shortcomings, Bishop et al introduced the Generative Topographic Mapping (GTM), a probabilistic latent-variable model inspired by the SOM \cite{gtm-orig}. When the latent space is chosen to be two dimensional, the GTM can be used to visualize the distribution of HSI spectra while the mapping of latent space nodes into the HSI data space provides endmembers\cite{robot-team-gtm}. Unfortunately, the rectangular latent space grid employed by the GTM does not directly translate into endmember abundances. Additionally, the expectation-maximization (EM) algorithm used to train the GTM does not guarantee non-negativity of GTM node spectra. 
 
-In this paper, we introduce a new variant of the GTM dubbed Generative Simplex Mapping (GSM) which can extract endmember spectra and unmix nonlinear mixtures. By replacing the rectangular latent-space of the GTM with a gridded $n$-simplex, the vertices of the GSM can be immediately interpreted as endmembers corresponding to $n+1$ unique spectral signatures. The mapping from the latent-space to the HSI data-space models signal mixing while barycentric coordinates for the latent-space simplex estimate relative endmember abundances. Furthermore, by taking inspiration from the multiplicative updates of NMF, the GSM algorithm maintains non-negativity of resulting endmember spectra. If only linear mixing is present, the GSM algorithm drives nonlinear contributions to $0$. Prior distributions included for GSM model weights yield hyperparameters which can be tuned to control the smoothness of resulting spectra and the degree of nonlinear mixing applied.
+In this paper, we introduce a new variant of the GTM dubbed Generative Simplex Mapping (GSM) which can extract endmember spectra and unmix nonlinear mixtures. By replacing the rectangular latent space of the GTM with a gridded $n$-simplex, the vertices of the GSM can be immediately interpreted as endmembers corresponding to $n+1$ unique spectral signatures. The mapping from the latent space to the HSI data space models signal mixing while barycentric coordinates for the latent space simplex estimate relative endmember abundances. Furthermore, by taking inspiration from the multiplicative updates of NMF, the GSM algorithm maintains non-negativity of resulting endmember spectra. If only linear mixing is present, the GSM algorithm drives nonlinear contributions to $0$. Prior distributions included for GSM model weights yield hyperparameters which can be tuned to control the smoothness of resulting spectra and the degree of nonlinear mixing applied.
 
 The rest of the paper is structured as follows. Section~\ref{sec:gsm} describes the proposed method. Section~\ref{sec:experiments} and Section~\ref{sec:results} describe experiments using simulated and real HSI data to evaluate the GSM model. Section~\ref{sec:disucssion} discusses additional applications and extensions of the GSM to be explored in future work. Finally, Section~\ref{sec:conclusions} finishes the paper with some closing remarks.
 
@@ -139,25 +139,24 @@ The rest of the paper is structured as follows. Section~\ref{sec:gsm} describes 
 
 \section{Generative Simplex Mapping}\label{sec:gsm}
 
-In the original GTM formulation, data vectors $x$ (e.g. reflectance spectra) are described by latent variables $z$ mapped into the data-spae by a nonlinear function $\psi$. The data-space distribution is taken to be normal with precision parameter $\beta$ to account for measurement noise and spectral variability. The GSM follows uses same structure, that is
+In the original GTM formulation, data vectors $x$ (reflectance spectra) are described by latent variables $z$ mapped into the data space by a nonlinear function $\psi$. The data space distribution is taken to be normal with precision parameter $\beta$ to account for measurement noise and spectral variability. The GSM uses same structure, that is
 \begin{equation}\label{eqn:data-space-distribution}
     p(x \mid z, \mathbf{W}, \beta) = \left(\frac{\beta}{2\pi} \right)^{D/2}\exp\left( -\frac{\beta}{2}\lVert \psi(z; \mathbf{W}) - x \rVert^2 \right)
 \end{equation}
-where $\mathbf{W}$ are weights which parameterize the mapping $\psi$.
+where $\mathbf{W}$ are model weights which parameterize the mapping $\psi$.
 
-Assuming data are uniformly sampled from an embedded manifold in the data-space, the GTM models the latent-space using a rectangular grid with $K$-many nodes of equal prior probability. To adapt the GTM to describe endmember mixing, the GSM makes two key changes. The first is to replace the rectangular GTM grid with a gridded simplex having $N_v$ vertices. Barycentric coordinates for each node then describe the relative abundance of each endmember with simplex vertices corresponding to pure endmember spectra. The second change is to replace the equal prior probabilities with adaptive mixing coefficients $\pi_k$ to allow the GSM to model HSI with non-uniform mixing distributions. Together, this leads to a latent-space prior given by
+Assuming data are uniformly sampled from an embedded manifold in the data space, the GTM models the latent space using a rectangular grid with $K$-many nodes of equal prior probability. To adapt the GTM to describe endmember mixing, the GSM makes two key changes. The first is to replace the rectangular GTM grid with a gridded simplex having $N_v$ vertices. Barycentric coordinates for each node then describe the relative abundance of each endmember with each vertex corresponding to a pure endmember. The second change is to replace the equal prior probabilities with adaptive mixing coefficients $\pi_k$ to allow the GSM to model HSI with non-uniform mixing distributions. Together, this leads to a latent space prior distribution given by
 \begin{equation}\label{eqn:latent-distribution}
     p(z) = \sum\limits_k^K \pi_k \, \delta(z - z_k) \quad\text{where}\quad  \sum_k^K\pi_k = 1.
 \end{equation}
 
 For a dataset containing $N$-many records, these definitions yield a log likelihood function given by
 \begin{equation}\label{eqn:llh}
-    \mathcal{L}(\mathbf{W}, \beta) = \sum\limits_n^N \ln \left( \sum\limits_k^K \pi_k \, p(x_n \mid z_k, \mathbf{W}, \beta) \right)
+    \mathcal{L} = \sum\limits_n^N \ln \left( \sum\limits_k^K \pi_k \, p(x_n \mid z_k, \mathbf{W}, \beta) \right)
 \end{equation}
-which can be maximized to obtain optimal values for model weights $\mathbf{W}$ and precision $\beta$. Rather than optimizing Eq~\ref{eqn:llh} directly, we instead choose a particular form for $\Psi$ to allow fitting the GSM via an EM algorithm.
+which can be maximized to obtain optimal values for model weights $\mathbf{W}$, mixing coefficients $\pi_k$, and precision $\beta$. Rather than optimizing Eq~\ref{eqn:llh} directly, we instead choose a particular form for $\psi$ to allow fitting the GSM via an EM algorithm.
 
-In the standard LMM model, the mapping $\Psi$ is given by $\psi(z;W) = \mathbf{W}z$ where the columns of $\mathbf{W}$ correspond to endmember spectra. To model nonlinear mixing, $z$ is replaced by the output of $M$-many activation functions such that $\Psi(z;W) = \mathbf{W}\phi(z)$. The activations applied to each GSM node can then be collected to form a matrix 
- $\mathbf{\Phi}_{km} = \phi_m(z_k)$. For $m \leq N_v$, we take $\Phi_{km} = z_k$ to account for linear mixing. The remaining  $M-N_v$ activations are computed using radial basis functions (RBF) with centers $\mu_m$ distributed throughout the simplex (but not at the vertices) so that 
+In the standard LMM model, the mapping $\psi$ is given by $\psi(z;W) = \mathbf{W}z$ where the columns of $\mathbf{W}$ correspond to endmember spectra. To model nonlinear mixing, $z$ is replaced by the output of $M$-many activation functions such that $\psi(z;W) = \mathbf{W}\phi(z)$. The activations applied to each GSM node can then be collected to form a matrix with elements $\Phi_{km} = \phi_m(z_k)$. For $m \leq N_v$, we take $\Phi_{km} = z_k$ to model linear mixing. The remaining  $M-N_v$ activations are computed using radial basis functions (RBF) with centers $\mu_m$ distributed throughout the simplex (but not at the vertices) with 
 \begin{equation}\label{eq:act-function}
     \Phi_{km} = \begin{cases}
         \dfrac{s - \lVert z_k - \mu_m \rVert}{s}; & \lVert z_k - \mu_m \rVert \leq s \\
@@ -193,11 +192,11 @@ For $\pi_k$, optimization can be performed using Lagrange multipliers to maintai
     \pi_k^{\text{new}}  = \frac{1}{N}\sum_n R_{kn}
 \end{equation}
 
-Optimization of Eq~\ref{eq:complete-data-llh} with respect to $\mathbf{W}$ leads to a linear system which can be solved using standard numerical methods. However, in this form we can not guarantee the non-negativity of $\mathbf{W}$. We therefore take inspiration from the multiplicative updates for NMF introduced by Lee and Seung \cite{nmf-orig}. A gradient-based update for $\mathbf{W}$ would take the form
+Optimization of Eq~\ref{eq:complete-data-llh} with respect to $\mathbf{W}$ leads to a linear system which can be solved using standard numerical methods. However, in this form we can not guarantee the non-negativity of $\mathbf{W}$ required to describe reflectance spectra. We therefore take inspiration from the multiplicative updates for NMF introduced by Lee and Seung \cite{nmf-orig}. A standard gradient-based update for $\mathbf{W}$ would take the form
 \begin{equation}
     \mathbf{W}_{\text{new}} = \mathbf{W} + \eta\frac{\partial Q}{\partial \mathbf{W}}
 \end{equation}
-for some learning rate $\eta$. Differentiating, we obtain
+for some learning rate $\eta$. Therefore, we differentiate to obtain
 \begin{equation}
     \frac{\partial Q}{\partial \mathbf{W}} = -\beta \mathbf{W}\mathbf{\Phi}^T\mathbf{G}\mathbf{\Phi} - \mathbf{\Lambda} + \beta \mathbf{X}^T\mathbf{R}^T\mathbf{\Phi}
 \end{equation}
@@ -212,40 +211,60 @@ If we allow for individual learning rates $\eta_{dm}$ for each element of $\math
 \begin{equation}
     \eta_{dm} = \frac{W_{dm}}{\left(\beta \mathbf{W}\mathbf{\Phi}^T\mathbf{G}\mathbf{\Phi}\right)_{dm} + \Lambda_{dm}}
 \end{equation}
-results in update equations for elements of $\mathbf{W}$ given by
+results in a multiplicative update rule given by
 \begin{equation}\label{eq:W-update}
     W_{dm}^{new}  = W_{dm} \cdot \dfrac{\left(\beta \mathbf{X}^T\mathbf{R}^T\mathbf{\Phi}\right)_{dm}}{\left(\beta \mathbf{W}\mathbf{\Phi}^T\mathbf{G}\mathbf{\Phi}\right)_{dm} + \Lambda_{dm}}
 \end{equation}
-From Eq~\ref{eq:W-update}, it is clear that we are multiplying $W_{dm}$ by non-negative values and therefore, $W_{dm}$ remains non-negative.
+From Eq~\ref{eq:W-update}, it is clear that we are multiplying $W_{dm}$ by strictly non-negative values, and therefore, non-negative $W_{dm}$ will remain so during each update. This update can also be repeated multiple times during each M-step to accelerate convergence.
 
-Finally, optimizing Eq~\ref{eq:complete-data-llh} with respect to $\beta$ yields
+Lastly, optimizing Eq~\ref{eq:complete-data-llh} with respect to $\beta$ yields
 \begin{equation}\label{eq:beta-update}
     \frac{1}{\beta^{\text{new}}}  = \frac{1}{ND}\sum\limits_n^N\sum\limits_k^K R_{kn}\lVert \psi(z_k; \mathbf{W}) - x_n \rVert^2.
 \end{equation}
-The expectation and maximization steps are repeated in turn until $Q$ converges to a predetermined tolerance level.
 
-\subsection{Implementation Details}
+To train a GSM model, weights $\mathbf{W}$ are randomly initialized to positive values. The mixing coefficients are initially set to $\pi_k = 1/K$. Finally, the precision parameter $\beta$ is initialized to the variance of the $(N_v+1)$-th principal component. After initialization, the expectation and maximization steps are repeated in turn until $Q$ converges to a predetermined tolerance level. For large $N_v$ we note that generating a regular grid within the simplex becomes cumbersome as the number grid nodes scales as ${k + N_v - 2 \choose N_v - 1}$ for $k$ nodes per edge. An alternative approach is to randomly sample points within the simplex to obtain a total of $K$ nodes. A Dirichlet distribution 
+\begin{equation}
+    p(z_1,...z_{N_v}) = \frac{\Gamma(\sum_i^{N_v}\alpha_i)}{\prod_{i}^{N_v}\Gamma(\alpha_i)} \prod_{i}^{N_v} z_i^{\alpha_i-1}
+\end{equation}
+with all $\alpha_i=1$ can be used to uniformly sample within the simplex. Since the mixing coefficients $\pi_k$ are adaptive, variability in node separation should not significantly impact the resulting GSM.
 
-The mixing coefficients are initially chosen so that $\pi_k = \frac{1}{K}$.
+The probabilistic form of the GSM means that a variety of information criteria can be used to evaluate the model fits. In this paper we consider two metrics, the Bayesian Information Criterion (BIC),
+\begin{equation}
+   \text{BIC} = P\ln(N) - 2\mathcal{L},
+\end{equation}
+and the Akaike Information Criterion (AIC),
+\begin{equation}
+    \text{AIC} = 2P - 2\mathcal{L}
+\end{equation}
+where $P$ is the total number of model parameters and $\mathcal{L}$ is the log likelihood from Eq~\ref{eqn:llh}.
 
-- Linear Method
+The map $\psi$ provides the representation of each node $z_k$ in the data space. Importantly, applying $\psi$ to each vertex extracts endmember spectra from the GSM. Slices $R_{\left[:,n\right]}$ of the matrix $\mathbf{R}$ define the responsibility of each latent node $z_k$ for the $n$-th spectrum $x_n$ in the dataset. Therefore once the GSM has been trained, $\mathbf{R}$ can be used to unmix endmember abundances by representing each record in the latent space via the mean: 
+\begin{equation}
+    \hat{z}_n = \sum_k^K R_{kn}z_k.
+\end{equation}
 
-- Nonlinear Method
-
-- Mixed Method
-
+A freely available implementation of the GSM is accessible at \cite{gtm-code}. The code is written in the Julia programming language and follows the Machine Learning in Julia (MLJ) common interface \cite{bezanson2012julia, blaom2020mlj}.
 
 \section{Experiments}\label{sec:experiments}
-\subsection{Linear Mixing: Comparison to NMF}
-- describe USGS data
-- describe NMF method (for comparisson)
-- describe evaluation criteria
 
+\subsection{Linear Mixing: Comparison to NMF}
+
+To illustrate the effectiveness of the GSM, we first demonstrate its ability to model simple linear mixing by driving nonlinear weights to zero during the fitting process. To this end, a synthetic dataset comprising linear mixtures of three sample spectra from the U.S. Geological Survey digital spectral library was generated by sampling $1000$ abundance vectors from a Dirichlet distribution with $\alpha_1=\alpha_2=\alpha_3=1/3$ \cite{usgs-spectra}. These known spectra and abundances are visualized in Figure~\ref{fig:usgs-data}
 
 \begin{figure}[H]
 \includegraphics[width=\columnwidth]{methods/usgs/usgs-dataset.pdf}
-\caption{Synthetic dataset from USGS spectra. \label{fig:usgs-data}}
+\caption{Synthetic dataset fromed from USGS spectra. \textbf{(a)} spectra from the USGS spectral database used as the ground truth endmembers. These spectra were selected to match \cite{vca-orig}. \textbf{(b)} The distribution of abundances used in the dataset. Samples were generated using a Dirichlet distribution with $\alpha_1=\alpha_2=\alpha_3=1/3$.}
+\label{fig:usgs-data}
 \end{figure}  
+
+Zero-mean Gaussian noise was added to the data to yield $9$ datasets with signal-to-noise ratios (SNR) ranging from $0$ to $\infty$ to examine the impact of random noise on GSM performance. For each of these datasets, a GSM was trained using $25$ nodes per edge with $\lambda_e$ set to the default value of $0.01$ and fixed to $\lambda_w = 100$. The large value of $\lambda_w$ was chosen to encourage the GSM to prefer models with limited nonlinear mixing.
+
+For comparison, NMF models were also trained on each dataset as this method is both highly popular and does not include the pure-pixel assumption common to other methods like VCA and PPI. Countless variations on the original NMF method have been introduced into the literature with one review identifying more than $100$ distinct NMF variations \cite{unmixing-nmf-review}. For the purpose of evaluating the GSM, we considered the standard $\ell_2$ and KL-divergence formulations introduced by Lee and Seung \cite{nmf-algorithms}. We also consider the robust $\ell_{2,1}$ NMF as introduced by Kong et al \cite{nmf-l21}.
+
+
+
+For comparison, three versions of NMF were also trained on each dataset. NMF was used as it is a highly popular method that does not include the pure-pixel assumption of other models 
+
 
 
 
@@ -344,7 +363,7 @@ $3$	& $1.0$     & $10.0$    & $-6.166\times10^7$   & $-6.239\times10^7$   & $0.0
 - Comparison to NMF on linear mixing problem
     - note that there are many versions of NMF with different constraints/regularization. The purpose here was to show that GSM is at least \textit{comparable} to NMF for linear unmixing problems
     - Further note that both NMF and GSM do not rely on assumption of pure pixels (unlike VCA and other methods) 
-    - GSM also allows estimation of endmember variability via the precision parameter $\beta$ i.e. nodes in data-space follow Gaussian distribution with $\sigma = \sqrt{\beta^{-1}}$
+    - GSM also allows estimation of endmember variability via the precision parameter $\beta$ i.e. nodes in data space follow Gaussian distribution with $\sigma = \sqrt{\beta^{-1}}$
 
 - Nonlinear GSM for robot team 
     - discuss identification of rhodamine plume and easy abundance mapping via the embedding coordinate
