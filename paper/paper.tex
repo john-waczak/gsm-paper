@@ -306,17 +306,29 @@ The PCA decomposition of the data suggests that at least $3$ endmembers should b
 \section{Results}\label{sec:results}
 \subsection{Linear Mixing}
 
+The results of GSM training on the synthetic linear mixing dataset described in Sec~\ref{sec:experiments} are illustrated in Figure~\ref{fig:usgs-fits}. Three versions of NMF were trained corresponding to Euclidean ($\ell_2$), KL-Divergence, and $\ell_{2,1}$ cost functions. GSM models using both a regular simplex grid and a grid of points sampled using a uniform Dirichlet distribution (referred to as a \textit{big} GSM model) were trained to compare performance on linear mixing tasks.
+
 \begin{figure}[H]
 \includegraphics[width=\columnwidth]{results/usgs/fit-comparison.pdf}
-\caption{Comparison of GSM against NMF on simulated USGS dataset. \label{fig:usgs-fits}}
+\caption{Comparison of GSM against NMF on simulated linear mixing dataset using USGS spectra. \textbf{(a)} The mean spectral angle computed between extracted endmembers and original endmembers. \textbf{(b)} the mean RMSE computed between extracted endmembers and original endmembers. \textbf{(c)} The mean abundance RMSE computed between original abundance data for each endmember and extracted abundances. \textbf{(d)} The reconstruction RMSE which evaluates the quality of fit. All models realized similar values reflecting convergence of the models to the level of random noise introduced into the data.}
+ \label{fig:usgs-fits}
 \end{figure}  
 
+The quality of endmember extraction is measured by the mean spectral angle and mean endmember RMSE. As Figure~\ref{fig:usgs-fits} indicates, both versions of the GSM outperformed their NMF counterparts. Additionally, we note that for all GSM models, even including $\text{SNR}=0$, all model weights $W_{dm}$ for $m>N_v$ corresponding to nonlinear mixing were driven identically to $0.0$. This confirms that for datasets with purely linear mixing and random noise, the GSM correctly fits a mixing model without introducing unnecessary complexity.
 
+The quality of unmixing, i.e. abundance estimation, performed by each model was evaluated using the mean abundance RMSE. Here we again see that both versions of the GSM outperformed NMF. To justify that all models were fairly trained to convergence, the data reconstruction RMSE was also computed. This metric uses the trained mixing model to compute the error between the original dataset and the reconstructed spectra generated using the extracted endmembers and their abundances. For all GSM and NMF models, the data reconstruction RMSE converged to the level of random noise introduced into the data. These results reflect a fair comparison between NMF and GSM models.
+
+In Figure~\ref{fig:usgs-endmembers}, we plot the extracted endmembers for the GSM model trained on the synthetic dataset with $\text{SNR}=20$.
 \begin{figure}[H]
-\includegraphics[width=\columnwidth]{results/usgs/extracted-endmembers.png}
-\caption{Endmembers extracted using GSM for simulated USGS dataset with SNR$=20$. \label{fig:usgs-endmembers}}
+\begin{adjustwidth}{-\extralength}{-4.25cm}
+\begin{center}
+\includegraphics[width=1.1\columnwidth]{results/usgs/extracted-endmembers.png}
+\end{center}
+\end{adjustwidth}
+\caption{Endmembers extracted by the GSM for the simulated linear mixing dataset with SNR$=20$. Dashed lines correspond to orignal endmember spectra from the USGS spectral database. Solid lines superimposed on the plot indicate the extracted endmember spectra. Colored bands are included around each spectrum corresponding to the spectral variability estimated by the GSM precision parameter $\beta$ where the band width is $2\sqrt{\beta^{-1}}$ corresponding to $2$ standard deviations.}
+\label{fig:usgs-endmembers}
 \end{figure}  
-
+The extracted endmembers clearly fit the original source spectra while capturing local reflectance features. Additionally, the GSM precision parameter $\beta$ which is tuned during model training provides an assessment of spectral varaiibilty due to random noise. In Figure~\ref{fig:usgs-endmembers}
 
 \subsection{Nonlinear Mixing: Rhodamine Dye Plume}
 
