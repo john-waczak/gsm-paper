@@ -166,7 +166,7 @@ In the standard LMM model, the mapping $\psi$ is given by $\psi(z;W) = \mathbf{W
 where $s$ is the spacing between RBF centers. In this form, the first $N_v$ columns of $\mathbf{W}$ correspond to endmember spectra while the remaining columns account for additional nonlinear effects. For linear mixing, the GSM training algorithm should therefore drive $W_{dm}$ to $0$ for $m\geq N_v$. A visualization of the GSM model is shown in Fig~\ref{fig:gsm-diagram}.
 
 \begin{figure}[H]
-\includegraphics[width=\columnwidth]{methods/gsm/gsm-diagram.pdf}
+\includegraphics[width=\columnwidth]{methods/gsm/gsm-diagram.png}
 \caption{Illustration of the GSM. The latent space consists of a grid of $K$-many points (green dots) distributed throughout a simplex with $N_v$ vertices. Barycentric coordinates of each node in the simplex correspond to the relative abundance of $N_v$-many unique sources. Here, $N_v=3$ has been chosen for illustrative purposes. Nodes are mapped into the data space via the map $\psi(z)$ utilizing $M$-many radially symmetric basis functions (red). Spectral variability is estimated via the precision parameter $\beta$ shown here in the data space as a light blue band around the spectrum given by $\psi(z)$.}
 \label{fig:gsm-diagram}
 \end{figure}  
