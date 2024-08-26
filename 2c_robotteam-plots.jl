@@ -336,7 +336,7 @@ heatmap!(ax, lon_min..lon_max, lat_min..lat_max, Zpred[:, :,1], colormap=cmap, c
 cb = Colorbar(fig[1,2],
               colormap=cmap, colorrange=clims,
               ticklabelsize=15,
-              label="Vegetation",
+              label="Vegetation Abundance",
               labelsize=16,
               minorticksvisible=true
               )
@@ -387,7 +387,7 @@ heatmap!(ax, lon_min..lon_max, lat_min..lat_max, Zpred[:, :,2], colormap=cmap, c
 cb = Colorbar(fig[1,2],
               colormap=cmap, colorrange=clims,
               ticklabelsize=15,
-              label="Water",
+              label="Water Abundance",
               labelsize=16,
               minorticksvisible=true,
               )
