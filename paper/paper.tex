@@ -64,6 +64,7 @@
 % Add packages and commands here. The following packages are loaded in our class file: fontenc, inputenc, calc, indentfirst, fancyhdr, graphicx, epstopdf, lastpage, ifthen, float, amsmath, amssymb, lineno, setspace, enumitem, mathpazo, booktabs, titlesec, etoolbox, tabto, xcolor, colortbl, soul, multirow, microtype, tikz, totcount, changepage, attrib, upgreek, array, tabularx, pbox, ragged2e, tocloft, marginnote, marginfix, enotez, amsthm, natbib, hyperref, cleveref, scrextend, url, geometry, newfloat, caption, draftwatermark, seqsplit
 % cleveref: load \crefname definitions after \begin{document}
 \graphicspath{{figures/}}
+\usepackage{pdfpages}
 
 
 %=================================================================
@@ -139,35 +140,35 @@ The remainder of the paper is structured as follows. Section~\ref{sec:gsm} descr
 
 \section{Generative Simplex Mapping}\label{sec:gsm}
 
-In the original GTM formulation, the data vectors $x$ (reflectance spectra) are described by latent variables $z$ mapped into the data space by a non-linear function $\psi$. The data space distribution is taken to be normal with the precision parameter $\beta$ to account for measurement noise and spectral variability. The GSM uses same structure, that is
+In the original GTM formulation, the data vectors $\mathbf{x}$ (reflectance spectra) are described by latent variables $\mathbf{z}$ mapped into the data space by a non-linear function $\psi$. The data space distribution is taken to be normal with the precision parameter $\beta$ to account for measurement noise and spectral variability. The GSM uses same structure, that is
 \begin{equation}\label{eqn:data-space-distribution}
-    p(x \mid z, \mathbf{W}, \beta) = \left(\frac{\beta}{2\pi} \right)^{D/2}\exp\left( -\frac{\beta}{2}\lVert \psi(z; \mathbf{W}) - x \rVert^2 \right)
+    p(\mathbf{x} \mid \mathbf{z}, \mathbf{W}, \beta) = \left(\frac{\beta}{2\pi} \right)^{D/2}\exp\left( -\frac{\beta}{2}\lVert \psi(\mathbf{z}; \mathbf{W}) - \mathbf{x} \rVert^2 \right)
 \end{equation}
 where $\mathbf{W}$ are model weights which parameterize the mapping $\psi$.
 
 Assuming data are uniformly sampled from an embedded manifold in the data space, the GTM models the latent space using a rectangular grid with $K$-many nodes of equal prior probability. To adapt the GTM to describe endmember mixing, the GSM makes two key changes. The first is to replace the rectangular GTM grid with a gridded simplex with $N_v$ vertices. The barycentric coordinates for each node then describe the relative abundance of each endmember with each vertex corresponding to a pure endmember. The second change is to replace equal prior probabilities with adaptive mixing coefficients $\pi_k$ to allow the GSM to model HSI with nonuniform mixing distributions. Together, this leads to a latent space prior distribution given by
 \begin{equation}\label{eqn:latent-distribution}
-    p(z) = \sum\limits_k^K \pi_k \, \delta(z - z_k) \quad\text{where}\quad  \sum_k^K\pi_k = 1.
+    p(\mathbf{z}) = \sum\limits_k^K \pi_k \, \delta(\mathbf{z} - \mathbf{z}_k) \quad\text{where}\quad  \sum_k^K\pi_k = 1.
 \end{equation}
 
 For a data set containing $N$-many records, these definitions yield a log likelihood function given by
 \begin{equation}\label{eqn:llh}
-    \mathcal{L} = \sum\limits_n^N \ln \left( \sum\limits_k^K \pi_k \, p(x_n \mid z_k, \mathbf{W}, \beta) \right)
+    \mathcal{L} = \sum\limits_n^N \ln \left( \sum\limits_k^K \pi_k \, p(\mathbf{x}_n \mid \mathbf{z}_k, \mathbf{W}, \beta) \right)
 \end{equation}
 which can be maximized to obtain optimal values for model weights $\mathbf{W}$, mixing coefficients $\pi_k$, and precision $\beta$. Rather than optimizing Eq~\ref{eqn:llh} directly, we instead choose a particular form for $\psi$ to allow fitting the GSM via an EM algorithm.
 
-In the standard LMM model, the mapping $\psi$ is given by $\psi(z;\mathbf{W}) = \mathbf{W}z$ where the columns of $\mathbf{W}$ correspond to endmember spectra. To model non-linear mixing, $z$ is replaced by the output of $M$-many activation functions such that $\psi(z;W) = \mathbf{W}\phi(z)$. The activations applied to each GSM node can then be collected to form a matrix with elements $\Phi_{km} = \phi_m(z_k)$. For $m \leq N_v$, we take $\Phi_{km} = z_k$ to model linear mixing. The remaining  $M-N_v$ activations are computed using radial basis functions (RBF) with centers $\mu_m$ distributed throughout the simplex (but not at the vertices) with 
+In the standard LMM model, the mapping $\psi$ is given by $\psi(\mathbf{z};\mathbf{W}) = \mathbf{W}\mathbf{z}$ where the columns of $\mathbf{W}$ correspond to endmember spectra. To model non-linear mixing, $\mathbf{z}$ is replaced by the output of $M$-many activation functions such that $\psi(\mathbf{z};\mathbf{W}) = \mathbf{W}\phi(\mathbf{z})$. The activations applied to each GSM node can then be collected to form a matrix with elements $\Phi_{km} = \phi_m(\mathbf{z}_k)$. For $m \leq N_v$, we take $\Phi_{km} = [\mathbf{z}_k]_m$ to model linear mixing. The remaining  $M-N_v$ activations are computed using radial basis functions (RBF) with centers $\mu_m$ distributed throughout the simplex (but not at the vertices) with 
 \begin{equation}\label{eq:act-function}
     \Phi_{km} = \begin{cases}
-        \dfrac{s - \lVert z_k - \mu_m \rVert}{s}; & \lVert z_k - \mu_m \rVert \leq s \\
-        0; & \lVert z_k - \mu_m \rVert > s
+        \dfrac{s - \lVert \mathbf{z}_k - \mu_m \rVert}{s}; & \lVert \mathbf{z}_k - \mu_m \rVert \leq s \\
+        0; & \lVert \mathbf{z}_k - \mu_m \rVert > s
     \end{cases}
 \end{equation}
 where $s$ is the spacing between RBF centers. In this form, the first $N_v$ columns of $\mathbf{W}$ correspond to endmember spectra, while the remaining columns account for additional non-linear effects. For linear mixing, the GSM training algorithm should therefore drive $W_{dm}$ to $0$ for $m\geq N_v$. A visualization of the GSM model is shown in Figure~\ref{fig:gsm-diagram}.
 
 \begin{figure}[H]
 \includegraphics[width=\columnwidth]{methods/gsm/gsm-diagram.png}
-\caption{Illustration of the GSM. The latent space consists of a grid of $K$-many points (green dots) distributed throughout a simplex with $N_v$ vertices. Barycentric coordinates of each node in the simplex correspond to the relative abundance of $N_v$-many unique sources. Here, $N_v=3$ has been chosen for illustrative purposes. Nodes are mapped into the data space via the map $\psi(z)$ utilizing $M$-many radially symmetric basis functions (red). Spectral variability is estimated via the precision parameter $\beta$ shown here in the data space as a light blue band around the spectrum given by $\psi(z)$.}
+\caption{Illustration of the GSM. The latent space consists of a grid of $K$-many points (green dots) distributed throughout a simplex with $N_v$ vertices. Barycentric coordinates of each node in the simplex correspond to the relative abundance of $N_v$-many unique sources. Here, $N_v=3$ has been chosen for illustrative purposes. Nodes are mapped into the data space via the map $\psi(\mathbf{z})$ utilizing $M$-many radially symmetric basis functions (red). Spectral variability is estimated via the precision parameter $\beta$ shown here in the data space as a light blue band around the spectrum given by $\psi(\mathbf{z})$.}
 \label{fig:gsm-diagram}
 \end{figure}  
 
@@ -175,7 +176,7 @@ To further constrain the model, we introduce prior distributions on the weights 
 
 An EM algorithm for the GSM model can now be formulated as follows. Suppose that we have current estimates for the model weights $\mathbf{W}$, mixing coefficients $\pi_k$, and precision parameter $\beta$. During the expectation step we compute the posterior probabilities, that is, the responsibility of each GSM node for each spectrum in the data set:
 \begin{equation}\label{eq:responsibility}
-    R_{kn}  = p(z_k \mid x_n, \mathbf{W}, \beta) = \dfrac{\pi_k \, p(x_n \mid z_k, \mathbf{W}, \beta)}{\sum\limits_{k'}^K \pi_{k'} \, p(x_n \mid z_{k'}, \mathbf{W}, \beta)}.
+    R_{kn}  = p(\mathbf{z}_k \mid \mathbf{x}_n, \mathbf{W}, \beta) = \dfrac{\pi_k \, p(\mathbf{x}_n \mid \mathbf{z}_k, \mathbf{W}, \beta)}{\sum\limits_{k'}^K \pi_{k'} \, p(\mathbf{x}_n \mid \mathbf{z}_{k'}, \mathbf{W}, \beta)}.
 \end{equation}
 For the maximization step, we consider the expectation of the penalized complete-data log likelihood given by
 \begin{equation}\label{eq:complete-data-llh}
@@ -219,12 +220,12 @@ From Eq~\ref{eq:W-update}, it is clear that we are multiplying $W_{dm}$ by stric
 
 Optimizing Eq~\ref{eq:complete-data-llh} with respect to $\beta$ yields the final update equation:
 \begin{equation}\label{eq:beta-update}
-    \frac{1}{\beta^{\text{new}}}  = \frac{1}{ND}\sum\limits_n^N\sum\limits_k^K R_{kn}\lVert \psi(z_k; \mathbf{W}) - x_n \rVert^2.
+    \frac{1}{\beta^{\text{new}}}  = \frac{1}{ND}\sum\limits_n^N\sum\limits_k^K R_{kn}\lVert \psi(\mathbf{z}_k; \mathbf{W}) - \mathbf{x}_n \rVert^2.
 \end{equation}
 
 To train a GSM model, weights $\mathbf{W}$ are randomly initialized to positive values. The mixing coefficients are initially set to $\pi_k = 1/K$. Finally, the precision parameter $\beta$ is initialized to the variance of the $(N_v+1)$-th principal component. After initialization, the expectation and maximization steps are repeated in turn until $Q$ converges to a predetermined tolerance level. For large $N_v$ we note that generating a regular grid within the simplex becomes cumbersome as the number of grid nodes scales as ${k + N_v - 2 \choose N_v - 1}$ for $k$ nodes per edge. An alternative approach is to randomly sample points within the simplex to obtain a total of $K$ nodes. A Dirichlet distribution 
 \begin{equation}
-    p(z_1,...z_{N_v}) = \frac{\Gamma(\sum_i^{N_v}\alpha_i)}{\prod_{i}^{N_v}\Gamma(\alpha_i)} \prod_{i}^{N_v} z_i^{\alpha_i-1}
+    p(\mathbf{z}) = \frac{\Gamma(\sum_i^{N_v}\alpha_i)}{\prod_{i}^{N_v}\Gamma(\alpha_i)} \prod_{i}^{N_v} [\mathbf{z}]_i^{\alpha_i-1}
 \end{equation}
 with all $\alpha_i=1$ can be used to uniformly sample within the simplex. Since the mixing coefficients $\pi_k$ are adaptive, variability in node separation should not significantly impact the resulting GSM.
 
@@ -240,7 +241,7 @@ where $P$ is the total number of model parameters and $\mathcal{L}$ is the log l
 
 The map $\psi$ provides the representation of each node $z_k$ in the data space. Importantly, applying $\psi$ to each vertex extracts endmember spectra from the GSM. Slices $R_{\left[:,n\right]}$ of the matrix $\mathbf{R}$ define the responsibility of each latent node $z_k$ for the $n$-th spectrum $x_n$ in the data set. Therefore once the GSM has been trained, $\mathbf{R}$ can be used to unmix endmember abundances by representing each record in the latent space via the mean: 
 \begin{equation}
-    \hat{z}_n = \sum_k^K R_{kn}z_k.
+    \hat{\mathbf{z}}_n = \sum_k^K R_{kn}\mathbf{z}_k.
 \end{equation}
 
 A freely available implementation of the GSM is provided at \cite{gtm-code}. The code is written in the Julia programming language and follows the Machine Learning in Julia (MLJ) common interface \cite{bezanson2012julia, blaom2020mlj}.
@@ -403,7 +404,7 @@ The main limitation of the GSM is the curse of dimensionality encountered when g
 
 Based on the results of applying the GSM to real HSI as illustrated in Figure~\ref{fig:endmember-abundance-dist} and Figure~\ref{fig:plume-evo}, one clear application of the GSM is to contaminant identification and water quality assessment. Modern UAV platforms make it possible to rapidly image bodies of water where direct access for in-situ data collection is restricted. By equipping UAVs with hyperspectral imagers, the GSM can be used to identify abnormal spectral signatures corresponding to localized contaminant sources. Generating semantic segmentations of collected HSI as in panel b of Figure~\ref{fig:robot-team-endmembers} makes it easy to compare multiple HSI without resorting to pseudocolor images generated from a limited number of wavelength bands. Since the GSM models the distribution of all HSI spectra rather than individual parameters, it may also aid in-situ data collection by suggesting sampling points which maximize the area traversed in the GSM latent space rather than uniformly sampling across a wide spatial extent. Similar approaches have been developed to guide autonomous data collection vehicles by casting route planning as a prize collecting travelling salesman problem subject to resource constraints \cite{balas2007prize, suryan2020learning}.
 
-As a final consideration, we note that the problem of endmember extraction and spectral unmixing for HSI is identical to source apportionment in the context of air quality. Here, the goal is to identify measurement profiles associated with sources of ambient air pollution based on measurements at a receptor site. A popular model for source apportionment studies is Positive Matrix Factorization (PMF) introduced by Paatero and Tapper \cite{pmf-orig, ulbrich2009interpretation}. Just like NMF, PMF decomposes measurements into a linear combination of source profiles and relative abundances subject to non-negativity constraints. These linear receptor models assume that the sources are not transformed during transport to the receptor, ignoring changes due to chemical reactions. Non-linear mixing models such as the GSM introduced here may, therefore, prove beneficial in this additional domain.
+As a final consideration, we note that the problem of endmember extraction and spectral unmixing for HSI is identical to source apportionment in the context of air quality. Here, the goal is to identify measurement profiles associated with sources of ambient air pollution based on measurements at a receptor site. A popular model for source apportionment studies is Positive Matrix Factorization (PMF) introduced by Paatero and Tapper \cite{pmf-orig, ulbrich2009interpretation}. Just like NMF, PMF decomposes measurements into a convex combination of source profiles and relative abundances subject to non-negativity constraints. These linear receptor models assume that the sources are not transformed during transport to the receptor, ignoring changes due to chemical reactions. Non-linear mixing models such as the GSM introduced here may, therefore, prove beneficial in this additional domain.
 
 
 \section{Conclusions}\label{sec:conclusions}
@@ -412,8 +413,9 @@ In this paper, we introduced the GSM as a novel method for unsupervised endmembe
 
 
 \section{Patents}
-
 \textcolor{red}{UPDATE ME!}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \vspace{6pt} 
