@@ -91,14 +91,16 @@ improvements. Thank you!
     apples-to-apples comparison to an established approach. To clarify this point,
     we have revised the text introducing the experiment to now read as follows:
 
-    #quote[
-      To illustrate the effectiveness of the GSM, we first demonstrate its
-      ability to model linear mixing. This serves as an important limiting case
-      since linearly mixed spectra should not lead to the spurous introduction of
-      non-linear contributions by the GSM. The goal of this first test is therefore to
+    #quote[   
+      To illustrate the effectiveness of the GSM, we first demonstrate its ability to
+      model linear mixing. This serves as an important limiting case since linearly
+      mixed spectra should not lead to the spurous introduction of non-linear
+      contributions by the GSM. The goal of this first test is therefore to
       demonstrate that the GSM drives non-linear weights to zero for linearly mixed
-      data while providing a fair test to compare GSM to well-established linear
-      mixing models.
+      data while providing a fair test to compare the GSM to a well-established linear
+      mixing model. This ability clealy distinguishes the GSM from other non-nonlinear
+      unmixing approaches such as autoencoders, which by their design, include
+      non-linear mixing even when it is not present in the underlying data.
     ]
 
     Additionaly, we have included the following line after describing the
